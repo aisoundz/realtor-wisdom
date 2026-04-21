@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realtor Wisdom — The Real Estate Operating System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+:root{
+  --teal:#1D9E75;--tl:#E1F5EE;--td:#085041;--tm:#0F6E56;--tdeep:#0F1A14;
+  --amb:#EF9F27;--al:#FAEEDA;--ad:#633806;
+  --red:#E24B4A;--rl:#FCEBEB;--rd:#791F1F;
+  --blu:#378ADD;--bl:#E6F1FB;--bd:#0C447C;
+  --pur:#7F77DD;--pl:#EEEDFE;--pd:#3C3489;
+  --ow:#F7F6F2;--ch:#1A1A18;--mg:#6B6B65;--lb:rgba(0,0,0,.08);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--ow);color:var(--ch);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;padding:0 48px;height:64px;background:transparent;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(247,246,242,.97);backdrop-filter:blur(16px);border-bottom-color:var(--lb)}
+.nav-logo{font-family:var(--serif);font-size:20px;color:var(--ch);text-decoration:none;flex-shrink:0;letter-spacing:-.02em}
+.nav-logo em{color:var(--teal);font-style:normal}
+.nav-links{display:flex;gap:28px;margin:0 auto}
+.nav-links a{font-size:13px;color:var(--mg);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--ch)}
+.nav-cta{background:var(--teal);color:white;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .2s;text-decoration:none;display:inline-block}
+.nav-cta:hover{background:var(--tm)}
+
+/* SHARED */
+section{padding:96px 48px}
+.si{max-width:1200px;margin:0 auto}
+.ey{font-size:11px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.14em;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.ey::before{content:'';width:22px;height:1px;background:var(--teal)}
+.sh{font-family:var(--serif);font-size:clamp(30px,3.8vw,50px);line-height:1.12;color:var(--ch);margin-bottom:20px}
+.ss{font-size:17px;line-height:1.75;color:var(--mg);max-width:620px;font-weight:300}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px}
+.pg{background:var(--tl);color:var(--td)}.pa{background:var(--al);color:var(--ad)}.pr{background:var(--rl);color:var(--rd)}.pb{background:var(--bl);color:var(--bd)}
+.btn-p{background:var(--teal);color:white;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:500;border:none;cursor:pointer;font-family:var(--sans);transition:all .2s;text-decoration:none;display:inline-block}
+.btn-p:hover{background:var(--tm);transform:translateY(-1px)}
+.btn-o{background:transparent;color:white;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:500;border:1px solid rgba(255,255,255,.22);cursor:pointer;font-family:var(--sans);transition:all .2s;text-decoration:none;display:inline-block}
+.btn-o:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.05)}
+.fu{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.fu.vis{opacity:1;transform:translateY(0)}
+.s1{transition-delay:.1s}.s2{transition-delay:.2s}.s3{transition-delay:.3s}.s4{transition-delay:.4s}.s5{transition-delay:.5s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ═══ HERO ═══ */
+.hero{min-height:100vh;background:var(--tdeep);display:flex;align-items:center;padding:120px 48px 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;opacity:.035;background-image:linear-gradient(rgba(29,158,117,.8) 1px,transparent 1px),linear-gradient(90deg,rgba(29,158,117,.8) 1px,transparent 1px);background-size:64px 64px}
+.hero-glow{position:absolute;top:-160px;right:-160px;width:560px;height:560px;background:radial-gradient(circle,rgba(29,158,117,.14) 0%,transparent 70%);pointer-events:none}
+.hero-glow2{position:absolute;bottom:-200px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(29,158,117,.06) 0%,transparent 70%);pointer-events:none}
+.hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;position:relative;z-index:1;width:100%}
+.hero-ey{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.14em;margin-bottom:28px}
+.hero-ey::before{content:'';width:28px;height:1px;background:var(--teal)}
+.hero h1{font-family:var(--serif);font-size:clamp(38px,4.5vw,60px);line-height:1.08;color:white;margin-bottom:24px}
+.hero h1 em{color:var(--teal);font-style:italic}
+.hero-sub{font-size:17px;line-height:1.75;color:rgba(255,255,255,.6);margin-bottom:40px;font-weight:300;max-width:520px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:48px}
+.hero-trust{display:flex;gap:24px;flex-wrap:wrap}
+.ti{font-size:12px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:6px}
+.ti::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+/* hero card */
+.hcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px;overflow:hidden;font-size:13px}
+.hc-bar{background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08);padding:11px 16px;display:flex;align-items:center;gap:8px}
+.hc-dots{display:flex;gap:5px}
+.hc-dot{width:8px;height:8px;border-radius:50%}
+.hc-lbl{font-size:10px;color:rgba(255,255,255,.32);font-weight:500;text-transform:uppercase;letter-spacing:.07em;margin-left:4px}
+.hc-ms{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(255,255,255,.07)}
+.hcm{padding:12px 14px;border-right:1px solid rgba(255,255,255,.07)}
+.hcm:last-child{border-right:none}
+.hcml{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.hcmv{font-size:19px;font-weight:500}
+.hc-rw{padding:10px 14px;background:rgba(29,158,117,.12);border-bottom:1px solid rgba(29,158,117,.18);display:flex;gap:8px;align-items:flex-start}
+.hc-dot2{width:7px;height:7px;border-radius:50%;background:var(--teal);margin-top:4px;flex-shrink:0;animation:pulse 2s infinite}
+.hc-rwt{font-size:11px;color:rgba(29,158,117,.9);line-height:1.55}
+.hc-rwt strong{font-weight:600;color:#5DCAA5}
+.hcrow{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05);gap:7px}
+.hcrow:last-of-type{border-bottom:none}
+.hcrn{font-size:12px;font-weight:500;color:rgba(255,255,255,.78);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcra{font-size:12px;font-weight:500;flex-shrink:0;text-align:right}
+.hcpill{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;flex-shrink:0}
+.hcpg{background:rgba(29,158,117,.2);color:#5DCAA5}
+.hcpa{background:rgba(239,159,39,.2);color:#FAC775}
+.hcpr{background:rgba(226,75,74,.2);color:#F09595}
+.hc-prog{padding:10px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.hc-pt{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.28);margin-bottom:6px}
+.hc-pt2{height:4px;background:rgba(255,255,255,.08);border-radius:2px;display:flex;overflow:hidden;gap:1px}
+.hcpb{height:4px}
+
+/* ═══ IMPACT NUMBERS BAND ═══ */
+.nums-s{background:var(--teal);padding:48px}
+.nums-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.2);border-radius:16px;overflow:hidden}
+.num-cell{background:var(--teal);padding:32px 28px;text-align:center}
+.num-v{font-family:var(--serif);font-size:48px;color:white;line-height:1;margin-bottom:8px}
+.num-l{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5}
+.num-l strong{display:block;font-weight:600;color:white;margin-bottom:2px}
+
+/* ═══ OLD VS NEW ═══ */
+.ovn-s{background:var(--ch);padding:96px 48px}
+.ovn-inner{max-width:1200px;margin:0 auto}
+.ovn-s .ey{color:var(--teal)}
+.ovn-s .sh{color:white;max-width:640px}
+.ovn-s .ss{color:rgba(255,255,255,.45);margin-bottom:56px}
+.ovn-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ovn-card{border-radius:16px;padding:32px;overflow:hidden}
+.ovn-old{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.ovn-new{background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.3)}
+.ovn-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.ovn-old .ovn-label{color:rgba(255,255,255,.35)}
+.ovn-new .ovn-label{color:var(--teal)}
+.ovn-label::before{content:'';width:8px;height:8px;border-radius:50%}
+.ovn-old .ovn-label::before{background:rgba(255,255,255,.2)}
+.ovn-new .ovn-label::before{background:var(--teal)}
+.ovn-title{font-family:var(--serif);font-size:26px;margin-bottom:24px}
+.ovn-old .ovn-title{color:rgba(255,255,255,.5)}
+.ovn-new .ovn-title{color:white}
+.ovn-items{display:flex;flex-direction:column;gap:12px}
+.ovn-item{display:flex;gap:10px;align-items:flex-start}
+.ovn-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
+.ovn-old .ovn-ic{background:rgba(226,75,74,.15);color:#F09595}
+.ovn-new .ovn-ic{background:rgba(29,158,117,.2);color:#5DCAA5}
+.ovn-item-t{font-size:14px;font-weight:500}
+.ovn-old .ovn-item-t{color:rgba(255,255,255,.45)}
+.ovn-new .ovn-item-t{color:white}
+.ovn-item-d{font-size:12px;line-height:1.5;margin-top:2px}
+.ovn-old .ovn-item-d{color:rgba(255,255,255,.25)}
+.ovn-new .ovn-item-d{color:rgba(255,255,255,.55)}
+.ovn-flow{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:28px;padding:16px;background:rgba(29,158,117,.08);border-radius:10px;border:1px solid rgba(29,158,117,.2)}
+.ovn-flow-step{text-align:center}
+.ovn-flow-ic{width:40px;height:40px;border-radius:12px;background:rgba(29,158,117,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px}
+.ovn-flow-l{font-size:11px;font-weight:500;color:white}
+.ovn-flow-arr{color:rgba(29,158,117,.5);font-size:20px;margin-top:-10px}
+
+/* ═══ FRAGMENTATION ═══ */
+.frag-s{background:white}
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:56px}
+.fc{background:var(--rl);border-radius:14px;padding:26px;border:1px solid rgba(226,75,74,.1);transition:transform .2s}
+.fc:hover{transform:translateY(-3px)}
+.ft{font-size:10px;font-weight:700;color:var(--rd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.ft::before{content:'';width:12px;height:1px;background:var(--red)}
+.fc h3{font-family:var(--serif);font-size:21px;color:var(--ch);margin-bottom:10px}
+.fc p{font-size:14px;color:var(--mg);line-height:1.65}
+.fq{margin-top:48px;padding:36px 44px;background:var(--ch);border-radius:16px}
+.fq p{font-family:var(--serif);font-size:clamp(19px,2.4vw,26px);color:white;line-height:1.5;font-style:italic}
+.fq cite{display:block;font-size:12px;color:rgba(255,255,255,.35);margin-top:16px;font-style:normal;text-transform:uppercase;letter-spacing:.08em}
+
+/* ═══ MODULES ═══ */
+.mod-s{background:var(--ow)}
+.mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:56px}
+.mod-card{border-radius:16px;padding:32px;border:1px solid transparent;transition:transform .2s,border-color .2s;cursor:pointer;position:relative;overflow:hidden}
+.mod-card:hover{transform:translateY(-3px)}
+.mod-card-dr{background:var(--tl);border-color:rgba(8,80,65,.12)}
+.mod-card-rw{background:var(--tdeep);border-color:rgba(29,158,117,.2)}
+.mod-card-cm{background:var(--bl);border-color:rgba(12,68,124,.1)}
+.mod-card-iv{background:var(--pl);border-color:rgba(60,52,137,.1)}
+.mod-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;display:inline-block;padding:4px 10px;border-radius:20px}
+.mod-card-dr .mod-badge{background:rgba(8,80,65,.12);color:var(--td)}
+.mod-card-rw .mod-badge{background:rgba(29,158,117,.2);color:#5DCAA5}
+.mod-card-cm .mod-badge{background:rgba(12,68,124,.1);color:var(--bd)}
+.mod-card-iv .mod-badge{background:rgba(60,52,137,.12);color:var(--pd)}
+.mod-title{font-family:var(--serif);font-size:28px;margin-bottom:12px}
+.mod-card-dr .mod-title{color:var(--td)}
+.mod-card-rw .mod-title{color:white}
+.mod-card-cm .mod-title{color:var(--bd)}
+.mod-card-iv .mod-title{color:var(--pd)}
+.mod-desc{font-size:15px;line-height:1.7;margin-bottom:20px}
+.mod-card-dr .mod-desc{color:rgba(8,80,65,.72)}
+.mod-card-rw .mod-desc{color:rgba(255,255,255,.55)}
+.mod-card-cm .mod-desc{color:rgba(12,68,124,.72)}
+.mod-card-iv .mod-desc{color:rgba(60,52,137,.72)}
+.mod-features{display:flex;flex-direction:column;gap:7px}
+.mf{font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.mf::before{content:'→';font-weight:700;flex-shrink:0;margin-top:1px}
+.mod-card-dr .mf{color:rgba(8,80,65,.65)}.mod-card-dr .mf::before{color:var(--teal)}
+.mod-card-rw .mf{color:rgba(255,255,255,.45)}.mod-card-rw .mf::before{color:var(--teal)}
+.mod-card-cm .mf{color:rgba(12,68,124,.65)}.mod-card-cm .mf::before{color:var(--blu)}
+.mod-card-iv .mf{color:rgba(60,52,137,.65)}.mod-card-iv .mf::before{color:var(--pur)}
+.mod-tag{position:absolute;bottom:24px;right:24px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.4}
+
+/* ═══ REAL WISDOM PERSONA ═══ */
+.rw-persona{background:var(--tdeep);padding:96px 48px;position:relative;overflow:hidden}
+.rw-pg{position:absolute;bottom:-80px;left:50%;transform:translateX(-50%);width:900px;height:400px;background:radial-gradient(ellipse,rgba(29,158,117,.1) 0%,transparent 70%);pointer-events:none}
+.rw-pg2{position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(29,158,117,.06) 0%,transparent 70%);pointer-events:none}
+.rw-persona-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.rw-persona .ey{color:var(--teal)}
+.rw-persona .sh{color:white}
+.rw-persona .ss{color:rgba(255,255,255,.5)}
+/* The meet Real Wisdom card */
+.rw-meet{margin-top:56px;display:grid;grid-template-columns:1fr 1.4fr;gap:40px;align-items:center}
+.rw-avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.rw-av-ring{width:120px;height:120px;border-radius:50%;background:rgba(29,158,117,.15);border:2px solid rgba(29,158,117,.4);display:flex;align-items:center;justify-content:center;position:relative}
+.rw-av-ring::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(29,158,117,.2);animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.04);opacity:1}}
+.rw-av-inner{font-family:var(--serif);font-size:36px;color:white;font-style:italic}
+.rw-av-name{font-size:18px;font-weight:500;color:white;letter-spacing:-.01em}
+.rw-av-title{font-size:12px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em}
+.rw-av-status{display:flex;align-items:center;gap:6px;font-size:11px;color:#5DCAA5}
+.rw-av-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+.rw-promises{display:flex;flex-direction:column;gap:16px}
+.rw-promise{display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;transition:border-color .2s}
+.rw-promise:hover{border-color:rgba(29,158,117,.3)}
+.rw-promise-ic{width:32px;height:32px;border-radius:50%;background:rgba(29,158,117,.18);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.rw-promise-t{font-size:14px;font-weight:500;color:white;margin-bottom:4px}
+.rw-promise-d{font-size:13px;color:rgba(255,255,255,.45);line-height:1.55}
+.rw-tagline{margin-top:48px;text-align:center;font-family:var(--serif);font-size:clamp(20px,2.5vw,28px);color:rgba(255,255,255,.65);font-style:italic;line-height:1.6;padding:0 60px}
+.rw-tagline strong{color:var(--teal);font-style:normal}
+/* conversation */
+.convo-wrap{margin-top:48px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;max-width:740px;margin-left:auto;margin-right:auto}
+.convo-h{padding:14px 20px;background:rgba(29,158,117,.14);border-bottom:1px solid rgba(29,158,117,.2);display:flex;align-items:center;gap:10px}
+.convo-av{width:28px;height:28px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0}
+.convo-name{font-size:13px;font-weight:500;color:#5DCAA5}
+.convo-badge{margin-left:auto;font-size:10px;font-weight:600;color:var(--teal);background:rgba(29,158,117,.15);padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em}
+.convo-msgs{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mu{align-self:flex-end;max-width:74%}
+.mr{align-self:flex-start;max-width:86%}
+.mu .b{background:rgba(55,138,221,.22);border-radius:12px 2px 12px 12px;padding:12px 16px;font-size:14px;color:rgba(255,255,255,.82);line-height:1.55}
+.mr .b{background:rgba(255,255,255,.07);border-radius:2px 12px 12px 12px;padding:12px 16px;font-size:14px;color:rgba(255,255,255,.78);line-height:1.62}
+.mr .b strong{color:white;font-weight:500}
+
+/* ═══ IMPACT SCORE ═══ */
+.ris-s{background:white}
+.ris-2col{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start;margin-top:56px}
+.story-card{background:var(--al);border-radius:16px;padding:32px;border-left:4px solid var(--amb)}
+.story-ey{font-size:10px;font-weight:700;color:var(--ad);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+.story-card p{font-size:15px;color:var(--ch);line-height:1.8;margin-bottom:14px;font-weight:300}
+.story-card p strong{color:var(--ch);font-weight:500}
+.story-card p:last-of-type{margin-bottom:18px}
+.opills{display:flex;gap:7px;flex-wrap:wrap}
+.opill{font-size:11px;font-weight:500;padding:4px 11px;border-radius:20px;background:rgba(239,159,39,.14);color:var(--ad)}
+.ris-right{display:flex;flex-direction:column;gap:20px}
+.ris-top{display:flex;align-items:center;gap:20px;padding:22px;background:var(--ow);border-radius:14px}
+.ring-w{position:relative;width:76px;height:76px;flex-shrink:0}
+.ring-w svg{transform:rotate(-90deg)}
+.ring-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:600;color:var(--ch)}
+.ris-info-label{font-size:13px;font-weight:500;color:var(--ch);margin-bottom:3px}
+.ris-info-sub{font-size:12px;color:var(--mg)}
+.ris-dims{display:flex;flex-direction:column;gap:11px}
+.dim-top{display:flex;justify-content:space-between;font-size:12px;color:var(--mg);margin-bottom:5px}
+.dim-val{font-weight:500}
+.bar-t{height:4px;background:rgba(0,0,0,.07);border-radius:2px;overflow:hidden}
+.bar-f{height:4px;border-radius:2px;width:0;transition:width 1.4s cubic-bezier(.4,0,.2,1)}
+.ris-note{padding:14px 16px;background:var(--ow);border-radius:10px;font-size:13px;color:var(--mg);line-height:1.6}
+.ris-note strong{color:var(--ch);font-weight:500}
+
+/* ═══ CHAIN ═══ */
+.chain-s{background:var(--ow)}
+.chain-2col{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.chain-list{display:flex;flex-direction:column}
+.ci{display:flex;gap:16px;position:relative;padding-bottom:28px}
+.ci:last-child{padding-bottom:0}
+.ci-l{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.ci-node{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.ci-line{width:1px;flex:1;margin-top:6px;min-height:28px}
+.ci:last-child .ci-line{display:none}
+.ci-yr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
+.ci-title{font-size:15px;font-weight:500;color:var(--ch);margin-bottom:5px;line-height:1.35}
+.ci-desc{font-size:13px;color:var(--mg);line-height:1.6}
+.ci-tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;margin-top:7px;text-transform:uppercase;letter-spacing:.05em}
+.chain-right .sh{font-size:clamp(26px,3.2vw,40px);margin-bottom:20px}
+.chain-right .ss{margin-bottom:28px}
+.formula-box{background:var(--ch);border-radius:16px;padding:28px}
+.f-title{font-size:11px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.f-terms{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.ft2{font-size:11px;font-weight:500;padding:6px 11px;border-radius:8px}
+.fop{color:rgba(255,255,255,.28);font-size:16px;padding:0 2px}
+.fresult{font-size:13px;font-weight:600;color:var(--teal);padding:7px 14px;background:rgba(29,158,117,.14);border-radius:8px;border:1px solid rgba(29,158,117,.28)}
+
+/* ═══ PLATFORM DEMO ═══ */
+.demo-s{background:var(--ch);padding:96px 48px}
+.demo-si{max-width:1240px;margin:0 auto}
+.demo-s .ey{color:var(--teal)}
+.demo-s .sh{color:white}
+.demo-s .ss{color:rgba(255,255,255,.45)}
+.demo-frame{margin-top:48px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden}
+.df-chrome{background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 16px;display:flex;align-items:center;gap:10px}
+.df-dots{display:flex;gap:5px}
+.df-dot{width:10px;height:10px;border-radius:50%}
+.df-url{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:5px 12px;font-size:11px;color:rgba(255,255,255,.28);font-family:monospace;margin:0 16px}
+.df-nav{display:flex;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
+.df-brand{font-family:var(--serif);font-size:14px;color:white;padding:11px 16px;border-right:1px solid rgba(255,255,255,.08);margin-right:4px;flex-shrink:0}
+.df-brand em{color:var(--teal);font-style:normal}
+.df-ntab{font-size:12px;padding:11px 14px;color:rgba(255,255,255,.38);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s;user-select:none;white-space:nowrap;flex-shrink:0}
+.df-ntab:hover{color:rgba(255,255,255,.7)}
+.df-ntab.on{color:white;font-weight:500;border-bottom-color:var(--teal)}
+.df-view{display:none}
+.df-view.on{display:block}
+/* deal room */
+.dr-head{padding:10px 16px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.dr-dname{font-size:13px;font-weight:500;color:white}
+.dr-dmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.dr-dmeta span{font-size:11px;color:rgba(255,255,255,.38)}
+.dr-ms{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.07)}
+.dr-mc{padding:10px 14px;background:rgba(255,255,255,.02);cursor:pointer;transition:background .12s}
+.dr-mc:hover{background:rgba(255,255,255,.05)}
+.dr-mcl{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.dr-mcv{font-size:17px;font-weight:500}
+.dr-rw{padding:10px 16px;background:rgba(29,158,117,.1);border-bottom:1px solid rgba(29,158,117,.16);display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:background .12s}
+.dr-rw:hover{background:rgba(29,158,117,.16)}
+.dr-rwd{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:4px;animation:pulse 2s infinite}
+.dr-rwt{font-size:12px;color:rgba(29,158,117,.9);line-height:1.55;flex:1}
+.dr-rwt strong{color:#5DCAA5;font-weight:600}
+.dr-2col{display:grid;grid-template-columns:1.4fr 1fr}
+.dr-left{border-right:1px solid rgba(255,255,255,.07)}
+.dr-ptabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07)}
+.dr-ptab{font-size:11px;padding:8px 13px;color:rgba(255,255,255,.35);cursor:pointer;border-bottom:2px solid transparent;user-select:none;transition:color .12s}
+.dr-ptab:hover{color:rgba(255,255,255,.7)}
+.dr-ptab.on{color:white;font-weight:500;border-bottom-color:var(--teal)}
+.dr-subview{display:none;flex-direction:column}
+.dr-subview.on{display:flex}
+.prog-wrap{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.prog-lbl{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:5px}
+.prog-track{height:5px;background:rgba(255,255,255,.08);border-radius:3px;display:flex;overflow:hidden;gap:1px}
+.prog-leg{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap}
+.pleg{display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.28)}
+.plegc{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cap-scroll{overflow-y:auto;max-height:230px}
+.ctrow{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;gap:7px;transition:background .12s}
+.ctrow:hover,.ctrow.sel{background:rgba(29,158,117,.08)}
+.ctrow:last-child{border-bottom:none}
+.ctn{font-size:12px;font-weight:500;flex:1;min-width:0;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctt{font-size:10px;color:rgba(255,255,255,.3);margin-top:1px}
+.cta2{font-size:11px;font-weight:500;flex-shrink:0;text-align:right}
+.dp{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;flex-shrink:0;white-space:nowrap}
+.dpg{background:rgba(29,158,117,.2);color:#5DCAA5}
+.dpa{background:rgba(239,159,39,.2);color:#FAC775}
+.dpr{background:rgba(226,75,74,.2);color:#F09595}
+.dpb{background:rgba(55,138,221,.2);color:#85B7EB}
+.cap-foot{padding:8px 14px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;font-size:11px;font-weight:500;color:rgba(255,255,255,.5);flex-shrink:0}
+.cap-foot span:last-child{color:white}
+/* checklist */
+.cl-item{display:flex;align-items:flex-start;gap:9px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s}
+.cl-item:hover{background:rgba(255,255,255,.03)}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:16px;height:16px;border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.cl-done{background:rgba(29,158,117,.2);color:#5DCAA5;border:1px solid rgba(29,158,117,.3)}
+.cl-pending{background:rgba(239,159,39,.15);color:#FAC775;border:1px solid rgba(239,159,39,.3)}
+.cl-blocked{background:rgba(226,75,74,.15);color:#F09595;border:1px solid rgba(226,75,74,.3)}
+.cl-todo{background:rgba(255,255,255,.06);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.1)}
+.cl-name{font-size:12px;font-weight:500;color:rgba(255,255,255,.75)}
+.cl-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+.cl-phase{padding:5px 14px;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.09em;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.cl-summary{padding:8px 14px;display:flex;gap:16px;border-top:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);flex-shrink:0}
+.cls{font-size:11px;display:flex;align-items:center;gap:5px}
+/* right panel */
+.dr-right{display:flex;flex-direction:column}
+.rw-panel{display:none;flex-direction:column;flex:1}
+.rw-panel.on{display:flex}
+.rw-ph{padding:10px 14px;background:rgba(29,158,117,.12);border-bottom:1px solid rgba(29,158,117,.18);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.rw-pav{width:26px;height:26px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+.rw-pt{font-size:12px;font-weight:500;color:#5DCAA5;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw-px{font-size:18px;color:#5DCAA5;cursor:pointer;opacity:.6;padding:0 4px;line-height:1}
+.rw-px:hover{opacity:1}
+.rw-pb{flex:1;overflow-y:auto;padding:14px;max-height:340px}
+.rw-msg{font-size:13px;color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:12px}
+.rw-msg strong{color:white;font-weight:500}
+.rw-opt{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s}
+.rw-opt:hover{border-color:var(--teal);background:rgba(29,158,117,.08)}
+.rw-onum{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.rw-otitle{font-size:12px;font-weight:500;color:white;margin-bottom:3px}
+.rw-obody{font-size:11px;color:rgba(255,255,255,.48);line-height:1.5}
+.rw-badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:5px;text-transform:uppercase;letter-spacing:.05em}
+.rw-qbtns{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.rw-qbtn{font-size:11px;padding:7px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.6);cursor:pointer;text-align:left;transition:all .12s;font-family:var(--sans)}
+.rw-qbtn:hover{background:rgba(29,158,117,.12);border-color:var(--teal);color:white}
+.rw-input-row{padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}
+.rw-input-row input{flex:1;font-size:12px;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:white;font-family:var(--sans)}
+.rw-input-row input::placeholder{color:rgba(255,255,255,.25)}
+.rw-input-row input:focus{outline:none;border-color:var(--teal)}
+.rtabs-wrap{display:flex;flex-direction:column;flex:1}
+.rtabs-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.rttab{font-size:11px;padding:8px 11px;color:rgba(255,255,255,.35);cursor:pointer;border-bottom:2px solid transparent;user-select:none;transition:color .12s}
+.rttab:hover{color:rgba(255,255,255,.7)}
+.rttab.on{color:white;font-weight:500;border-bottom-color:var(--teal)}
+.rtsubview{display:none;overflow-y:auto;max-height:340px}
+.rtsubview.on{display:block}
+.ms-item{display:flex;gap:9px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s;align-items:flex-start}
+.ms-item:hover{background:rgba(255,255,255,.04)}
+.ms-item:last-child{border-bottom:none}
+.msc{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px}
+.msd{background:rgba(29,158,117,.2);color:#5DCAA5}
+.msa{background:rgba(239,159,39,.2);color:#FAC775}
+.mst{background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.1)}
+.ms-n{font-size:12px;font-weight:500;color:rgba(255,255,255,.78)}
+.ms-s{font-size:11px;color:rgba(255,255,255,.38);margin-top:1px}
+.ms-d{font-size:10px;color:rgba(255,255,255,.22);margin-top:2px}
+.act-item{display:flex;gap:9px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.05)}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.act-txt{font-size:12px;color:rgba(255,255,255,.62);line-height:1.45}
+.act-txt strong{color:rgba(255,255,255,.82);font-weight:500}
+.act-time{font-size:10px;color:rgba(255,255,255,.22);margin-top:2px}
+/* score subview */
+.score-view{padding:14px}
+.sc-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sc-ring{position:relative;width:56px;height:56px;flex-shrink:0}
+.sc-ring svg{transform:rotate(-90deg)}
+.sc-rn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:white}
+.sc-lbl{font-size:13px;font-weight:500;color:white;margin-bottom:2px}
+.sc-sub{font-size:11px;color:rgba(255,255,255,.38)}
+.sc-sbar{margin-bottom:8px;cursor:pointer}
+.sc-sbt{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.42);margin-bottom:4px}
+/* advisor tab */
+.adv-msgs{padding:16px;display:flex;flex-direction:column;gap:12px;min-height:180px;max-height:280px;overflow-y:auto}
+/* public deal profile */
+.pdp-wrap{padding:16px;overflow-y:auto;max-height:440px}
+.pdp-head{background:var(--tdeep);border-radius:12px;padding:20px;margin-bottom:12px;border:1px solid rgba(29,158,117,.2)}
+.pdp-title{font-family:var(--serif);font-size:20px;color:white;margin-bottom:4px}
+.pdp-sub{font-size:12px;color:rgba(255,255,255,.45);margin-bottom:16px}
+.pdp-prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:6px}
+.pdp-prog-t{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.pdp-ms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.pdp-m{background:rgba(255,255,255,.06);border-radius:8px;padding:10px;text-align:center}
+.pdp-mv{font-size:16px;font-weight:500;color:white}
+.pdp-ml{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px}
+.pdp-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px;margin-bottom:10px}
+.pdp-shead{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.35);margin-bottom:10px}
+.pdp-impact{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pdp-ic{background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.15);border-radius:8px;padding:10px;text-align:center}
+.pdp-iv{font-size:18px;font-weight:500;color:#5DCAA5}
+.pdp-il{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.pdp-cta{display:flex;gap:8px;margin-top:12px}
+.pdp-cta-btn{flex:1;padding:10px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;text-align:center;font-family:var(--sans);transition:all .15s;border:none}
+.pdp-primary{background:var(--teal);color:white}
+.pdp-primary:hover{background:var(--tm)}
+.pdp-secondary{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12)!important}
+/* portfolio */
+.port-view{padding:0}
+.pv-ms{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.07)}
+.pv-m{padding:10px 14px;background:rgba(255,255,255,.02)}
+.pv-ml{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.pv-mv{font-size:16px;font-weight:500}
+.ptable{width:100%;border-collapse:collapse;table-layout:fixed}
+.ptable th{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);text-align:left;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);text-transform:uppercase;letter-spacing:.05em}
+.ptable td{font-size:12px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.75);vertical-align:middle}
+.ptable tr{cursor:pointer;transition:background .12s}
+.ptable tr:hover td{background:rgba(255,255,255,.04)}
+.ptable tr:last-child td{border-bottom:none}
+
+/* ═══ CAPITAL MARKETPLACE ═══ */
+.mkt-s{background:var(--ch);padding:96px 48px}
+.mkt-s .ey{color:var(--teal)}
+.mkt-s .sh{color:white}
+.mkt-s .ss{color:rgba(255,255,255,.45);margin-bottom:56px}
+.mkt-2col{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.mkt-how{display:flex;flex-direction:column;gap:22px}
+.mkt-step{display:flex;gap:14px;align-items:flex-start}
+.mkt-step-n{width:36px;height:36px;border-radius:50%;background:rgba(29,158,117,.18);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--teal);flex-shrink:0;margin-top:2px}
+.mkt-step-t{font-size:15px;font-weight:500;color:white;margin-bottom:5px}
+.mkt-step-d{font-size:14px;color:rgba(255,255,255,.45);line-height:1.65}
+.mkt-pull{margin-top:32px;padding:22px;background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);border-radius:14px}
+.mkt-pull-ey{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.mkt-pull-q{font-family:var(--serif);font-size:18px;color:rgba(255,255,255,.78);line-height:1.6;font-style:italic}
+.mkt-cards{display:flex;flex-direction:column;gap:10px}
+.mkt-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .2s,background .2s}
+.mkt-card:hover{border-color:var(--teal);background:rgba(29,158,117,.06)}
+.mkt-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mkt-card-name{font-size:13px;font-weight:500;color:white}
+.mkt-card-match{font-size:13px;font-weight:600;color:#5DCAA5}
+.mkt-card-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:10px}
+.mkt-bar-t{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.mkt-bar-f{height:3px;border-radius:2px}
+.mkt-more{text-align:center;padding:12px;font-size:12px;color:rgba(255,255,255,.22)}
+
+/* ═══ WHO WE SERVE ═══ */
+.serve-s{background:white}
+.serve-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:56px}
+.scard{border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:26px;transition:border-color .2s,transform .2s}
+.scard:hover{border-color:var(--teal);transform:translateY(-2px)}
+.scard-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:16px}
+.scard h3{font-size:15px;font-weight:500;color:var(--ch);margin-bottom:7px}
+.scard p{font-size:13px;color:var(--mg);line-height:1.6;margin-bottom:14px}
+.scard-gets{border-top:1px solid rgba(0,0,0,.06);padding-top:12px;display:flex;flex-direction:column;gap:5px}
+.sg{font-size:12px;color:var(--mg);display:flex;gap:7px;align-items:flex-start}
+.sg::before{content:'→';color:var(--teal);flex-shrink:0;font-weight:600;margin-top:1px}
+
+/* ═══ STATS ═══ */
+.stats-s{background:var(--ch);padding:80px 48px}
+.stats-inner{max-width:1200px;margin:0 auto}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden;margin-bottom:32px}
+.stat-cell{padding:40px;background:var(--ch);text-align:center}
+.stat-n{font-family:var(--serif);font-size:54px;color:var(--teal);margin-bottom:8px;line-height:1}
+.stat-l{font-size:14px;color:rgba(255,255,255,.4);line-height:1.55}
+.case-study{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:32px 40px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.cs-ey{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.cs-t{font-family:var(--serif);font-size:24px;color:white;margin-bottom:8px}
+.cs-sub{font-size:14px;color:rgba(255,255,255,.4)}
+.cs-results{display:flex;flex-direction:column;gap:11px}
+.cs-r{display:flex;gap:10px}
+.cs-r::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:5px}
+.cs-r span{font-size:14px;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* ═══ MANIFESTO ═══ */
+.mani-s{background:var(--ow)}
+.mani-inner{max-width:720px;margin:0 auto}
+.mani-inner .sh{font-size:clamp(34px,4.5vw,54px);margin-bottom:36px}
+.mp{font-size:17px;line-height:1.88;color:var(--mg);margin-bottom:26px;font-weight:300}
+.mp strong{color:var(--ch);font-weight:500}
+.mpull{font-family:var(--serif);font-size:clamp(21px,2.8vw,28px);color:var(--ch);line-height:1.55;font-style:italic;border-left:3px solid var(--teal);padding-left:26px;margin:44px 0}
+.mclose{margin-top:56px;padding:48px;background:var(--ch);border-radius:20px;text-align:center}
+.mclose p{font-family:var(--serif);font-size:clamp(21px,2.8vw,30px);color:white;line-height:1.45;margin-bottom:14px}
+.mclose p:last-child{color:var(--teal);margin-bottom:0}
+
+/* ═══ CTA ═══ */
+.cta-s{background:var(--tdeep);padding:96px 48px;text-align:center;position:relative;overflow:hidden}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(29,158,117,.18) 0%,transparent 70%);pointer-events:none}
+.cta-inner{max-width:680px;margin:0 auto;position:relative;z-index:1}
+.cta-inner h2{font-family:var(--serif);font-size:clamp(34px,4.5vw,52px);color:white;margin-bottom:20px;line-height:1.18}
+.cta-inner p{font-size:17px;color:rgba(255,255,255,.5);margin-bottom:40px;font-weight:300}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ═══ FOOTER ═══ */
+footer{background:var(--ch);padding:60px 48px 36px}
+.fi{max-width:1200px;margin:0 auto}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.ft-logo{font-family:var(--serif);font-size:22px;color:white;margin-bottom:14px}
+.ft-logo em{color:var(--teal);font-style:normal}
+.ft-tag{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65}
+.fc-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,.38);text-decoration:none;margin-bottom:10px;transition:color .2s}
+.footer-col a:hover{color:rgba(255,255,255,.8)}
+.ft-bot{border-top:1px solid rgba(255,255,255,.08);padding-top:22px;display:flex;justify-content:space-between;align-items:center}
+.ft-copy,.ft-mission{font-size:12px;color:rgba(255,255,255,.22)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:960px){
+  nav{padding:0 20px}
+  nav .nav-links{display:none}
+  section,section.rw-persona,section.demo-s,section.mkt-s,section.stats-s,section.cta-s,section.ovn-s{padding:64px 20px}
+  .hero{padding:100px 20px 60px}
+  .hero-inner,.ris-2col,.chain-2col,.case-study,.mkt-2col,.ovn-grid{grid-template-columns:1fr;gap:40px}
+  .fg,.serve-grid{grid-template-columns:1fr 1fr}
+  .mod-grid{grid-template-columns:1fr}
+  .nums-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr}
+  .ft-top{grid-template-columns:1fr 1fr;gap:32px}
+  .dr-2col{grid-template-columns:1fr}
+  .dr-right{border-top:1px solid rgba(255,255,255,.08)}
+  .dr-ms{grid-template-columns:repeat(3,1fr)}
+  .pv-ms{grid-template-columns:repeat(2,1fr)}
+  .rw-meet{grid-template-columns:1fr}
+  .rw-tagline{padding:0 20px}
+}
+@media(max-width:600px){
+  .fg,.serve-grid,.nums-grid{grid-template-columns:1fr}
+  .hero-trust{flex-direction:column;gap:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#home" class="nav-logo">Realtor <em>Wisdom</em></a>
+  <div class="nav-links">
+    <a href="#modules">Platform</a>
+    <a href="#real-wisdom">Real Wisdom AI</a>
+    <a href="#impact-score">Impact score</a>
+    <a href="#demo">Live demo</a>
+    <a href="#marketplace">Capital marketplace</a>
+    <a href="#manifesto">Manifesto</a>
+  </div>
+  <a href="#demo" class="nav-cta">See it live</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-ey">The real estate operating system</div>
+      <h1>Real estate moves the world.<br><em>The infrastructure<br>moving real estate<br>is broken.</em></h1>
+      <p class="hero-sub">Realtor Wisdom is the operating system for real estate capital — where every deal, every relationship, and every community outcome is tracked, measured, and made more intelligent with every interaction.</p>
+      <div class="hero-btns">
+        <a href="#demo" class="btn-p">See the platform live</a>
+        <a href="#manifesto" class="btn-o">Read the manifesto</a>
+      </div>
+      <div class="hero-trust">
+        <span class="ti">Real Wisdom AI · always on</span>
+        <span class="ti">Full value chain · one platform</span>
+        <span class="ti">Real Impact Score™</span>
+      </div>
+    </div>
+    <div class="hcard">
+      <div class="hc-bar">
+        <div class="hc-dots"><div class="hc-dot" style="background:#E24B4A"></div><div class="hc-dot" style="background:#EF9F27"></div><div class="hc-dot" style="background:#1D9E75"></div></div>
+        <span class="hc-lbl">Southside Commons · Active deal</span>
+      </div>
+      <div class="hc-ms">
+        <div class="hcm"><div class="hcml">Capital goal</div><div class="hcmv" style="color:white">$7.2M</div></div>
+        <div class="hcm"><div class="hcml">Secured</div><div class="hcmv" style="color:#5DCAA5">$5.9M</div></div>
+        <div class="hcm"><div class="hcml">Impact score</div><div class="hcmv" style="color:#5DCAA5">84</div></div>
+      </div>
+      <div class="hc-rw">
+        <div class="hc-dot2"></div>
+        <div class="hc-rwt"><strong>Real Wisdom:</strong> Apex Fund has +$400K available on your approved loan. Bridgeview CDFI doc missing — blocking close in 3 days. The $1,200 gap has 3 fast solutions.</div>
+      </div>
+      <div class="hcrow"><div style="flex:1"><div class="hcrn">Apex Impact Fund</div><div style="font-size:10px;color:rgba(255,255,255,.28)">Impact loan</div></div><span class="hcpill hcpg">Approved</span><span style="font-size:10px;color:#FAC775;flex-shrink:0">+$400K</span><div class="hcra" style="color:rgba(255,255,255,.65)">$2.1M</div></div>
+      <div class="hcrow"><div style="flex:1"><div class="hcrn">Bridgeview CDFI</div><div style="font-size:10px;color:rgba(255,255,255,.28)">CDFI loan</div></div><span class="hcpill hcpa">Pending</span><span style="font-size:10px;color:#F09595;flex-shrink:0">Doc missing</span><div class="hcra" style="color:rgba(255,255,255,.65)">$1.2M</div></div>
+      <div class="hcrow"><div style="flex:1"><div class="hcrn">Greenway NMTC Equity</div><div style="font-size:10px;color:rgba(255,255,255,.28)">Tax credit equity</div></div><span class="hcpill hcpa">Pending</span><span style="font-size:10px;color:#F09595;flex-shrink:0">9 days</span><div class="hcra" style="color:rgba(255,255,255,.65)">$1.7M</div></div>
+      <div class="hcrow"><div style="flex:1"><div class="hcrn" style="color:rgba(255,255,255,.4)">Remaining gap</div></div><span class="hcpill hcpr">Gap</span><div class="hcra" style="color:#F09595">$1,200</div></div>
+      <div class="hc-prog">
+        <div class="hc-pt"><span>Stack completion</span><span>82% of $7.2M</span></div>
+        <div class="hc-pt2"><div class="hcpb" style="width:58%;background:#1D9E75"></div><div class="hcpb" style="width:24%;background:#EF9F27"></div><div class="hcpb" style="width:17%;background:rgba(255,255,255,.1)"></div><div class="hcpb" style="width:1%;background:#E24B4A"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT NUMBERS BAND -->
+<div class="nums-s">
+  <div class="nums-grid">
+    <div class="num-cell fu"><div class="num-v">8 wks</div><div class="num-l"><strong>Capital stack completion</strong>Down from 6 months average</div></div>
+    <div class="num-cell fu s1"><div class="num-v">$400K</div><div class="num-l"><strong>Unclaimed capacity found</strong>On an already-approved source</div></div>
+    <div class="num-cell fu s2"><div class="num-v">23</div><div class="num-l"><strong>Belief capital moments</strong>Logged and traceable to outcomes</div></div>
+    <div class="num-cell fu s3"><div class="num-v">247</div><div class="num-l"><strong>Families housed</strong>From one developer relationship started at $800</div></div>
+  </div>
+</div>
+
+<!-- OLD WAY VS REAL WISDOM WAY -->
+<section class="ovn-s" id="old-vs-new">
+  <div class="ovn-inner">
+    <div class="ey fu">The transformation</div>
+    <h2 class="sh fu s1">The old way is broken.<br>The new way is here.</h2>
+    <p class="ss fu s2" style="color:rgba(255,255,255,.45)">Every developer, fund, and institution in real estate is operating with fragmented tools, manual coordination, and no unified view. Realtor Wisdom changes all of it — in one platform.</p>
+    <div class="ovn-grid fu s1">
+      <div class="ovn-card ovn-old">
+        <div class="ovn-label">The old way</div>
+        <div class="ovn-title">11 spreadsheet tabs.<br>6 email threads.<br>4 separate logins.</div>
+        <div class="ovn-items">
+          <div class="ovn-item"><div class="ovn-ic">✕</div><div><div class="ovn-item-t">Capital stack in a spreadsheet</div><div class="ovn-item-d">Goes stale the moment it's saved. No one knows the real status.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✕</div><div><div class="ovn-item-t">Stakeholders in separate inboxes</div><div class="ovn-item-d">Lender, CDFI, attorney, contractor — all operating blind to each other.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✕</div><div><div class="ovn-item-t">Intelligence locked in insiders' heads</div><div class="ovn-item-d">First-time developers start from zero every single time.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✕</div><div><div class="ovn-item-t">Impact measured in output only</div><div class="ovn-item-d">Jobs and units counted. The conversation that made it possible — never tracked.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✕</div><div><div class="ovn-item-t">Post-close abandoned</div><div class="ovn-item-d">The deal closes and the system of record disappears.</div></div></div>
+        </div>
+      </div>
+      <div class="ovn-card ovn-new">
+        <div class="ovn-label">The Realtor Wisdom way</div>
+        <div class="ovn-title">One platform.<br>Every stakeholder.<br>Real Wisdom watching.</div>
+        <div class="ovn-items">
+          <div class="ovn-item"><div class="ovn-ic">✓</div><div><div class="ovn-item-t">Living deal room — always current</div><div class="ovn-item-d">Every source, every status, every stakeholder in one place. Real Wisdom flags every risk before you ask.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✓</div><div><div class="ovn-item-t">Every stakeholder on one system</div><div class="ovn-item-d">Developer, lender, CDFI, government — all sharing one view of the deal.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✓</div><div><div class="ovn-item-t">Capital marketplace — matched by AI</div><div class="ovn-item-d">Every eligible source identified, scored, and connected. No gatekeeping.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✓</div><div><div class="ovn-item-t">Real Impact Score — the full causal chain</div><div class="ovn-item-d">Not just jobs and units. The belief moment, the network activation, the bridge loan — all measured.</div></div></div>
+          <div class="ovn-item"><div class="ovn-ic">✓</div><div><div class="ovn-item-t">Post-close monitoring — always on</div><div class="ovn-item-d">The deal closes. The intelligence continues. Real Wisdom tracks performance, flags risks, identifies refinance opportunities.</div></div></div>
+        </div>
+        <div class="ovn-flow">
+          <div class="ovn-flow-step"><div class="ovn-flow-ic">📋</div><div class="ovn-flow-l">Your deal</div></div>
+          <div class="ovn-flow-arr">→</div>
+          <div class="ovn-flow-step"><div class="ovn-flow-ic" style="background:rgba(29,158,117,.3)">✦</div><div class="ovn-flow-l">Real Wisdom</div></div>
+          <div class="ovn-flow-arr">→</div>
+          <div class="ovn-flow-step"><div class="ovn-flow-ic">🏘</div><div class="ovn-flow-l">Community built</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAGMENTATION -->
+<section class="frag-s" id="problem">
+  <div class="si">
+    <div class="ey fu">The problem</div>
+    <h2 class="sh fu s1">Every real estate deal is already<br>a coordination crisis.</h2>
+    <p class="ss fu s2">Developers manage 8–15 capital sources in spreadsheets. Stakeholders operate in silos. Institutions deploy capital blind. The knowledge that closes deals lives in insiders' heads — inaccessible to anyone who wasn't born into the right network.</p>
+    <div class="fg">
+      <div class="fc fu s1"><div class="ft">Fragmentation point</div><h3>Capital is invisible</h3><p>Developers track 8–15 capital sources in spreadsheets that go stale the moment they're saved. Unclaimed capacity goes unnoticed for weeks.</p></div>
+      <div class="fc fu s2"><div class="ft">Fragmentation point</div><h3>Stakeholders are siloed</h3><p>Lenders, CDFIs, government agencies, attorneys, and contractors each live in their own systems. Every handoff is a coordination failure waiting to happen.</p></div>
+      <div class="fc fu s3"><div class="ft">Fragmentation point</div><h3>Intelligence is gatekept</h3><p>The knowledge of what works lives in insiders' heads. First-time developers start from zero, every single time.</p></div>
+      <div class="fc fu s1"><div class="ft">Fragmentation point</div><h3>Access requires connections</h3><p>The best capital relationships take decades to build. Underserved developers are locked out not by capability but by network.</p></div>
+      <div class="fc fu s2"><div class="ft">Fragmentation point</div><h3>Institutions fly blind</h3><p>Impact funds and CDFIs deploy millions with no unified portfolio view. The early warning signal exists — it just lives in someone's inbox.</p></div>
+      <div class="fc fu s3"><div class="ft">Fragmentation point</div><h3>Post-close is abandoned</h3><p>Once a deal closes, the system of record disappears. Every platform treats funding as the finish line. In real estate, it's the starting line.</p></div>
+    </div>
+    <div class="fq fu">
+      <p>"These are not personal failures. They are infrastructure failures. And infrastructure is what we build."</p>
+      <cite>— Realtor Wisdom manifesto</cite>
+    </div>
+  </div>
+</section>
+
+<!-- FOUR MODULES -->
+<section class="mod-s" id="modules">
+  <div class="si">
+    <div class="ey fu">The platform</div>
+    <h2 class="sh fu s1">Four modules. One connected system.<br>Pick your entry point.</h2>
+    <p class="ss fu s2">Each module delivers value on its own. Together they create something the industry has never had — full intelligence across the entire real estate capital lifecycle.</p>
+    <div class="mod-grid">
+      <div class="mod-card mod-card-dr fu s1">
+        <div class="mod-badge">Module 01 · Deal Room</div>
+        <h3 class="mod-title">The developer's command center</h3>
+        <p class="mod-desc">Every capital source, every stakeholder, every milestone — in one living system that never goes stale. From first site visit to final occupancy.</p>
+        <div class="mod-features">
+          <div class="mf">Living capital stack tracker — always current</div>
+          <div class="mf">Compliance checklist — every item required to close</div>
+          <div class="mf">Public deal profile — shareable, investor-facing page</div>
+          <div class="mf">Developer journey — your full growth story tracked</div>
+          <div class="mf">Post-close monitoring — the deal never goes dark</div>
+        </div>
+        <div class="mod-tag" style="color:var(--td)">For developers</div>
+      </div>
+      <div class="mod-card mod-card-rw fu s2">
+        <div class="mod-badge">Module 02 · Real Wisdom AI</div>
+        <h3 class="mod-title">The advisor that never sleeps</h3>
+        <p class="mod-desc">Trained on real estate — its language, its structures, its capital sources, and its risk patterns. Proactive, not reactive. Always in the room.</p>
+        <div class="mod-features">
+          <div class="mf">Flags risk before you ask — proactive intelligence</div>
+          <div class="mf">Drafts outreach, applications, and deal packages</div>
+          <div class="mf">Identifies unclaimed capital on approved sources</div>
+          <div class="mf">Voice mode — ask from any job site, any meeting</div>
+          <div class="mf">Learns your deal, your portfolio, your relationships</div>
+        </div>
+        <div class="mod-tag" style="color:#5DCAA5">For every stakeholder</div>
+      </div>
+      <div class="mod-card mod-card-cm fu s3">
+        <div class="mod-badge">Module 03 · Capital Marketplace</div>
+        <h3 class="mod-title">Where the right deal finds the right capital</h3>
+        <p class="mod-desc">CDFIs, impact funds, state agencies, foundations, government programs — matched to your specific deal. No gatekeeping. Day one access for every developer.</p>
+        <div class="mod-features">
+          <div class="mf">AI match scoring — every source ranked by fit</div>
+          <div class="mf">Deal profile is your application — no re-entry</div>
+          <div class="mf">One-click add to deal stack — sourcing to tracking</div>
+          <div class="mf">Network access without the network</div>
+          <div class="mf">Real Wisdom explains every match and every gap</div>
+        </div>
+        <div class="mod-tag" style="color:var(--bd)">For developers & CDFIs</div>
+      </div>
+      <div class="mod-card mod-card-iv fu s4">
+        <div class="mod-badge">Module 04 · Institution View</div>
+        <h3 class="mod-title">Portfolio intelligence for funds and lenders</h3>
+        <p class="mod-desc">Real-time visibility across every deal, every relationship, and every community outcome. The Fund Real Impact Score — your legacy, measured.</p>
+        <div class="mod-features">
+          <div class="mf">Live portfolio dashboard — every deal, every status</div>
+          <div class="mf">Fund Real Impact Score™ — belief capital tracked</div>
+          <div class="mf">Early warning signals — risk before it becomes loss</div>
+          <div class="mf">Relationship depth scores — who needs attention</div>
+          <div class="mf">Community impact reporting — the full downstream story</div>
+        </div>
+        <div class="mod-tag" style="color:var(--pd)">For funds & lenders</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REAL WISDOM PERSONA -->
+<section class="rw-persona" id="real-wisdom">
+  <div class="rw-pg"></div><div class="rw-pg2"></div>
+  <div class="rw-persona-inner">
+    <div class="ey fu">Meet Real Wisdom</div>
+    <h2 class="sh fu s1">The advisor every developer<br>deserves but most have never had.</h2>
+    <p class="ss fu s2">Not a chatbot. Not a search engine. A real estate–native AI that has read every document in your deal, knows every capital source in the market, and shows up at every critical moment — before you think to ask.</p>
+    <div class="rw-meet fu s1">
+      <div class="rw-avatar-wrap">
+        <div class="rw-av-ring"><div class="rw-av-inner">RW</div></div>
+        <div class="rw-av-name">Real Wisdom</div>
+        <div class="rw-av-title">Real estate AI advisor</div>
+        <div class="rw-av-status">Active · always on</div>
+      </div>
+      <div class="rw-promises">
+        <div class="rw-promise"><div class="rw-promise-ic">📄</div><div><div class="rw-promise-t">I have read every document in your deal.</div><div class="rw-promise-d">Every commitment letter, every term sheet, every overdue follow-up. I know the status of your capital stack better than your spreadsheet does.</div></div></div>
+        <div class="rw-promise"><div class="rw-promise-ic">🗺</div><div><div class="rw-promise-t">I know every capital source in this market.</div><div class="rw-promise-d">CDFIs, impact funds, state agencies, foundations, tax credit programs. I match your deal to every source it qualifies for — and explain why.</div></div></div>
+        <div class="rw-promise"><div class="rw-promise-ic">⚡</div><div><div class="rw-promise-t">I never sleep.</div><div class="rw-promise-d">While you are on the construction site, I am watching your Greenway commitment. While you are in the board meeting, I found $400K you didn't know was available.</div></div></div>
+        <div class="rw-promise"><div class="rw-promise-ic">🎯</div><div><div class="rw-promise-t">I always tell you the truth.</div><div class="rw-promise-d">Not what you want to hear. What you need to know. If your deal is at risk, you will hear it from me first — with options, not just warnings.</div></div></div>
+      </div>
+    </div>
+    <div class="rw-tagline fu">"Every developer deserves an advisor who has read every document, knows every source, and <strong>always tells the truth.</strong> That advisor is Real Wisdom."</div>
+    <div class="convo-wrap fu">
+      <div class="convo-h"><div class="convo-av">RW</div><span class="convo-name">Real Wisdom · Southside Commons</span><span class="convo-badge">Active</span></div>
+      <div class="convo-msgs">
+        <div class="mu"><div class="b">What if Greenway NMTC falls through?</div></div>
+        <div class="mr"><div class="b">If Greenway ($1.7M) falls through, three backup paths — I'd start the first one now regardless:<br><br><strong>Illinois Housing Authority</strong> gap financing — 91% match, up to $4M, your deal qualifies today. Application window closes June 30. Start this week as a parallel track regardless of Greenway.<br><br><strong>Urban Impact Ventures</strong> equity co-investment — up to $800K, moves fast on Chicago deals, strong mission alignment with your project.<br><br><strong>Great Lakes CDFI Alliance</strong> — $1.5M max, 78% match, 4 active members in Chicago.<br><br>IHA + Urban Impact covers the full $1.7M with room to spare. The 9-day silence from Greenway is your real urgency — want me to draft that outreach right now?</div></div>
+        <div class="mu"><div class="b">Yes — draft it.</div></div>
+        <div class="mr"><div class="b">"Hi [name], following up on Southside Commons NMTC allocation. We're targeting April 20 for construction close and want to ensure alignment on your timeline. Are there any additional items needed to finalize the commitment? Happy to connect this week." — Send this today, follow with a call tomorrow morning.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT SCORE -->
+<section class="ris-s" id="impact-score">
+  <div class="si">
+    <div class="ey fu">The Real Impact Score™</div>
+    <h2 class="sh fu s1">The most valuable thing a fund ever did<br>was not a dollar. It was a conversation.</h2>
+    <p class="ss fu s2">Every impact dashboard measures what capital did after it moved. Nobody measures what made capital move in the first place. Until now.</p>
+    <div class="ris-2col">
+      <div class="story-card fu s1">
+        <div class="story-ey">The principle — why this changes everything</div>
+        <p>A founder had $800 left. The fund showed up — not to evaluate, but to believe. That conversation produced $500K in follow-on funding, a tier-1 partnership, and a company that is now live, growing, and serving thousands of patients in underserved communities.</p>
+        <p>None of that shows up on any impact dashboard. The spreadsheet records the bridge loan. It doesn't record the belief that made the bridge worth building. It doesn't trace the chain from that room to the communities now being served.</p>
+        <p><strong>Realtor Wisdom measures the full causal chain — from first conversation to final community outcome.</strong> The Real Impact Score is the first metric that captures not just what capital produced, but what the relationship created.</p>
+        <div class="opills">
+          <span class="opill">1 conversation</span><span class="opill">$500K raised</span><span class="opill">Tier-1 partnership</span><span class="opill">Company thriving</span><span class="opill">Community served</span>
+        </div>
+      </div>
+      <div class="ris-right fu s2">
+        <div class="ris-top">
+          <div class="ring-w">
+            <svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="30" fill="none" stroke="rgba(0,0,0,.07)" stroke-width="6"/><circle cx="38" cy="38" r="30" fill="none" stroke="#1D9E75" stroke-width="6" stroke-dasharray="138 188" stroke-linecap="round"/></svg>
+            <div class="ring-n">84</div>
+          </div>
+          <div><div class="ris-info-label">Marcus Tillman — Real Impact Score™</div><div class="ris-info-sub">Tillman Development Group · Top 18% · Rising</div></div>
+        </div>
+        <div class="ris-dims">
+          <div class="ris-dim"><div class="dim-top"><span>Community outcomes</span><span class="dim-val" style="color:var(--teal)">91</span></div><div class="bar-t"><div class="bar-f" style="background:var(--teal)" data-w="91"></div></div></div>
+          <div class="ris-dim"><div class="dim-top"><span>Financial performance</span><span class="dim-val" style="color:var(--teal)">88</span></div><div class="bar-t"><div class="bar-f" style="background:var(--teal)" data-w="88"></div></div></div>
+          <div class="ris-dim"><div class="dim-top"><span>Growth trajectory</span><span class="dim-val" style="color:var(--teal)">82</span></div><div class="bar-t"><div class="bar-f" style="background:var(--teal)" data-w="82"></div></div></div>
+          <div class="ris-dim"><div class="dim-top"><span>Network depth</span><span class="dim-val" style="color:var(--ad)">67</span></div><div class="bar-t"><div class="bar-f" style="background:var(--amb)" data-w="67"></div></div></div>
+          <div class="ris-dim"><div class="dim-top"><span>Belief capital received</span><span class="dim-val" style="color:var(--ad)">74</span></div><div class="bar-t"><div class="bar-f" style="background:var(--amb)" data-w="74"></div></div></div>
+        </div>
+        <div class="ris-note"><strong>Investor fund score: 91</strong> — Top 5% nationally. 23 belief capital moments logged. 47 network activations. 312 community units created and tracked.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORK EFFECT CHAIN -->
+<section class="chain-s">
+  <div class="si">
+    <div class="chain-2col">
+      <div>
+        <div class="ey fu" style="margin-bottom:32px">The network effect</div>
+        <div class="chain-list">
+          <div class="ci fu s1"><div class="ci-l"><div class="ci-node" style="background:var(--al);color:var(--ad)">1</div><div class="ci-line" style="background:rgba(239,159,39,.2)"></div></div><div style="flex:1;padding-top:4px"><div class="ci-yr" style="color:var(--ad)">2021 · Belief capital</div><div class="ci-title">The conversation — $800 left in the account</div><div class="ci-desc">The Apex team showed up — not to evaluate, but to believe. That moment changed what was possible.</div><span class="ci-tag" style="background:var(--al);color:var(--ad)">Unmeasured on every platform until now</span></div></div>
+          <div class="ci fu s2"><div class="ci-l"><div class="ci-node" style="background:var(--bl);color:var(--bd)">2</div><div class="ci-line" style="background:rgba(55,138,221,.2)"></div></div><div style="flex:1;padding-top:4px"><div class="ci-yr" style="color:var(--bd)">2021 · Connection capital</div><div class="ci-title">Introduction to grant program — $45K unlocked</div><div class="ci-desc">One introduction produced $45K in non-dilutive capital. The network effect begins.</div><span class="ci-tag" style="background:var(--bl);color:var(--bd)">1 introduction → $45K</span></div></div>
+          <div class="ci fu s3"><div class="ci-l"><div class="ci-node" style="background:var(--tl);color:var(--td)">3</div><div class="ci-line" style="background:rgba(29,158,117,.2)"></div></div><div style="flex:1;padding-top:4px"><div class="ci-yr" style="color:var(--td)">2022 · First deal closed</div><div class="ci-title">Westfield Row — 32 units · 68 families housed</div><div class="ci-desc">$4.1M capital stack. 68 families housed. 14 jobs created. Impact score rises from 0 to 61.</div><span class="ci-tag" style="background:var(--tl);color:var(--td)">First community outcome</span></div></div>
+          <div class="ci fu s4"><div class="ci-l"><div class="ci-node" style="background:var(--rl);color:var(--rd)">4</div><div class="ci-line" style="background:rgba(226,75,74,.2)"></div></div><div style="flex:1;padding-top:4px"><div class="ci-yr" style="color:var(--rd)">2023 · Survival capital</div><div class="ci-title">End of runway — bridge loan · company lives</div><div class="ci-desc">$85K bridge loan. Payroll made. Client closed. Company now live, growing, serving thousands. Without it, the chain ends here.</div><span class="ci-tag" style="background:var(--rl);color:var(--rd)">$85K bridge → 112 units downstream</span></div></div>
+          <div class="ci fu s5"><div class="ci-l"><div class="ci-node" style="background:var(--tl);color:var(--td)">5</div></div><div style="flex:1;padding-top:4px"><div class="ci-yr" style="color:var(--td)">2025 · Compounding impact</div><div class="ci-title">Southside Commons — 32 units · 3 days from closing</div><div class="ci-desc">$7.2M. Impact score 84. 68 families projected. Food desert served. Generational wealth created. All traceable to 2021.</div><span class="ci-tag" style="background:var(--tl);color:var(--td)">3 deals · 112 units · 247 families · RIS 84</span></div></div>
+        </div>
+      </div>
+      <div class="chain-right fu s2">
+        <h2 class="sh">You can't put a number on belief.<br>But you can measure<br>everything it built.</h2>
+        <p class="ss" style="margin-bottom:28px">Most platforms measure output: jobs created, units built, dollars deployed. The Real Impact Score measures the <strong style="color:var(--ch);font-weight:500">upstream cause</strong> — the belief, the connection, the survival moment that made everything else possible.</p>
+        <p class="ss" style="margin-bottom:36px;font-size:15px">A fund's Real Impact Score is not its IRR. It is its legacy. And for the first time, that legacy has a number.</p>
+        <div class="formula-box">
+          <div class="f-title">Real Impact Score™ — what gets measured</div>
+          <div class="f-terms">
+            <span class="ft2" style="background:var(--tl);color:var(--td)">Financial returns</span><span class="fop">+</span>
+            <span class="ft2" style="background:var(--al);color:var(--ad)">Belief capital</span><span class="fop">+</span>
+            <span class="ft2" style="background:var(--bl);color:var(--bd)">Network activation</span><span class="fop">+</span>
+            <span class="ft2" style="background:var(--rl);color:var(--rd)">Survival moments</span><span class="fop">+</span>
+            <span class="ft2" style="background:var(--pl);color:var(--pd)">Community outcomes</span><span class="fop">=</span>
+            <span class="fresult">Real Impact Score™</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORM DEMO -->
+<section class="demo-s" id="demo">
+  <div class="demo-si">
+    <div class="ey fu">Live platform demo</div>
+    <h2 class="sh fu s1">The deal room — click anything.</h2>
+    <p class="ss fu s2">Every row, every metric, every stakeholder opens a Real Wisdom response. The compliance checklist shows exactly what is blocking your close. The public deal profile is what your capital sources see.</p>
+    <div class="demo-frame fu">
+      <div class="df-chrome">
+        <div class="df-dots"><div class="df-dot" style="background:#E24B4A"></div><div class="df-dot" style="background:#EF9F27"></div><div class="df-dot" style="background:#1D9E75"></div></div>
+        <div class="df-url">app.realtorwisdom.com/deals/southside-commons</div>
+      </div>
+      <div class="df-nav">
+        <span class="df-brand">Realtor <em>Wisdom</em></span>
+        <span class="df-ntab on" onclick="switchDemo('deal',this)">Deal room</span>
+        <span class="df-ntab" onclick="switchDemo('checklist',this)">Compliance</span>
+        <span class="df-ntab" onclick="switchDemo('public',this)">Public profile</span>
+        <span class="df-ntab" onclick="switchDemo('advisor',this)">Real Wisdom AI</span>
+        <span class="df-ntab" onclick="switchDemo('marketplace',this)">Capital marketplace</span>
+        <span class="df-ntab" onclick="switchDemo('portfolio',this)">Institution view</span>
+      </div>
+
+      <!-- DEAL ROOM TAB -->
+      <div class="df-view on" id="dv-deal">
+        <div class="dr-head">
+          <div>
+            <div class="dr-dname">Southside Commons — Affordable Housing Development</div>
+            <div class="dr-dmeta"><span>32 units · Chicago, IL</span><span style="color:rgba(255,255,255,.15)">·</span><span>Mixed-income affordable</span><span style="color:rgba(255,255,255,.15)">·</span><span class="dp dpa">Capital close in progress</span></div>
+          </div>
+          <button onclick="openRW('brief','Today\'s action plan',{t:'brief'})" style="font-size:11px;padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--sans)">Real Wisdom brief</button>
+        </div>
+        <div class="dr-ms">
+          <div class="dr-mc" onclick="openRW('goal','Capital goal',{t:'goal'})"><div class="dr-mcl">Capital goal</div><div class="dr-mcv" style="color:white">$7.2M</div></div>
+          <div class="dr-mc" onclick="openRW('approved','$5.9M secured',{t:'approved'})"><div class="dr-mcl">Approved</div><div class="dr-mcv" style="color:#5DCAA5">$5.9M</div></div>
+          <div class="dr-mc" onclick="openRW('pending','$2.9M pending',{t:'pending'})"><div class="dr-mcl">Pending</div><div class="dr-mcv" style="color:#FAC775">$2.9M</div></div>
+          <div class="dr-mc" onclick="openRW('gap','Close the $1,200 gap',{t:'gap'})"><div class="dr-mcl">Gap</div><div class="dr-mcv" style="color:#F09595">$1,200</div></div>
+          <div class="dr-mc" onclick="openRW('score','Deal health score — 84',{t:'score'})"><div class="dr-mcl">Deal health</div><div class="dr-mcv" style="color:#5DCAA5">84</div></div>
+        </div>
+        <div class="dr-rw" onclick="openRW('brief','Today\'s full action plan',{t:'brief'})">
+          <div class="dr-rwd"></div>
+          <div class="dr-rwt"><strong>Real Wisdom · Today:</strong> Apex Fund has +$400K available — request it today. Bridgeview CDFI is missing 1 document blocking close in 3 days. Greenway NMTC is 9 days overdue — highest risk. <span style="color:var(--teal)">Click for full action plan →</span></div>
+        </div>
+        <div class="dr-2col">
+          <div class="dr-left">
+            <div class="dr-ptabs">
+              <span class="dr-ptab on" onclick="switchLeft('capital',this)">Capital stack</span>
+              <span class="dr-ptab" onclick="switchLeft('score',this)">Deal score</span>
+              <span class="dr-ptab" onclick="switchLeft('docs',this)">Documents</span>
+            </div>
+            <div class="dr-subview on" id="dl-capital">
+              <div class="prog-wrap">
+                <div class="prog-lbl"><span>Stack completion</span><span style="font-weight:500;color:rgba(255,255,255,.55)">$5.9M of $7.2M</span></div>
+                <div class="prog-track"><div style="width:58%;height:5px;background:#1D9E75"></div><div style="width:24%;height:5px;background:#EF9F27"></div><div style="width:17%;height:5px;background:rgba(255,255,255,.1)"></div><div style="width:1%;height:5px;background:#E24B4A"></div></div>
+                <div class="prog-leg"><div class="pleg"><div class="plegc" style="background:#1D9E75"></div>Approved 58%</div><div class="pleg"><div class="plegc" style="background:#EF9F27"></div>Pending 24%</div><div class="pleg"><div class="plegc" style="background:rgba(255,255,255,.2)"></div>Requested 17%</div><div class="pleg"><div class="plegc" style="background:#E24B4A"></div>Gap &lt;1%</div></div>
+              </div>
+              <div class="cap-scroll">
+                <div class="ctrow" onclick="openRW('apex','Apex Impact Fund — +$400K available',{t:'apex'})"><div style="flex:1"><div class="ctn">Apex Impact Fund</div><div class="ctt">Impact loan</div></div><span class="dp dpg">Approved</span><span style="font-size:10px;color:#FAC775;flex-shrink:0">+$400K</span><div class="cta2" style="color:rgba(255,255,255,.65)">$2,100,000</div></div>
+                <div class="ctrow" style="background:rgba(226,75,74,.04)" onclick="openRW('bridgeview','Bridgeview CDFI — 1 doc missing',{t:'bridgeview'})"><div style="flex:1"><div class="ctn">Bridgeview CDFI</div><div class="ctt">CDFI loan</div></div><span class="dp dpa">Pending</span><span style="font-size:10px;color:#F09595;font-weight:600;flex-shrink:0">Doc missing</span><div class="cta2" style="color:rgba(255,255,255,.65)">$1,200,000</div></div>
+                <div class="ctrow" onclick="openRW('cs','Cornerstone CF Note',{t:'source',n:'Cornerstone CF Note',s:'Approved',a:'$450,000'})"><div style="flex:1"><div class="ctn">Cornerstone CF Note</div><div class="ctt">Community foundation</div></div><span class="dp dpg">Approved</span><div class="cta2" style="color:rgba(255,255,255,.65)">$450,000</div></div>
+                <div class="ctrow" onclick="openRW('delta','Delta TIF Loan',{t:'source',n:'Delta TIF Loan',s:'Approved',a:'$900,000'})"><div style="flex:1"><div class="ctn">Delta TIF Loan</div><div class="ctt">TIF loan</div></div><span class="dp dpg">Approved</span><div class="cta2" style="color:rgba(255,255,255,.65)">$900,000</div></div>
+                <div class="ctrow" style="background:rgba(239,159,39,.04)" onclick="openRW('greenway','Greenway NMTC — 9 days overdue',{t:'greenway'})"><div style="flex:1"><div class="ctn">Greenway NMTC Equity</div><div class="ctt">Tax credit equity</div></div><span class="dp dpa">Pending</span><span style="font-size:10px;color:#F09595;font-weight:600;flex-shrink:0">9 days overdue</span><div class="cta2" style="color:rgba(255,255,255,.65)">$1,700,000</div></div>
+                <div class="ctrow" onclick="openRW('harbor','Harbor TI Prepaid',{t:'source',n:'Harbor TI Prepaid',s:'In LOI',a:'$285,000'})"><div style="flex:1"><div class="ctn">Harbor TI Prepaid</div><div class="ctt">Tenant improvement</div></div><span class="dp dpb">In LOI</span><div class="cta2" style="color:rgba(255,255,255,.65)">$285,000</div></div>
+                <div class="ctrow" onclick="openRW('inland','Inland Corridor Grant',{t:'source',n:'Inland Corridor Grant',s:'Approved',a:'$29,500'})"><div style="flex:1"><div class="ctn">Inland Corridor Grant</div><div class="ctt">City grant</div></div><span class="dp dpg">Approved</span><div class="cta2" style="color:rgba(255,255,255,.65)">$29,500</div></div>
+                <div class="ctrow" onclick="openRW('equity','Developer Equity',{t:'source',n:'Developer Equity',s:'Confirmed',a:'$220,000'})"><div style="flex:1"><div class="ctn">Developer Equity</div><div class="ctt">Developer contribution</div></div><span class="dp dpg">Confirmed</span><div class="cta2" style="color:rgba(255,255,255,.65)">$220,000</div></div>
+                <div class="ctrow" style="background:rgba(226,75,74,.06)" onclick="openRW('gap','Close the $1,200 gap',{t:'gap'})"><div style="flex:1"><div class="ctn" style="color:#F09595">Remaining gap</div><div class="ctt" style="color:rgba(226,75,74,.5)">Needs resolution · 3 options</div></div><span class="dp dpr">Gap</span><div class="cta2" style="color:#F09595">$1,200</div></div>
+              </div>
+              <div class="cap-foot"><span>Total sources</span><span>$6,885,700</span></div>
+            </div>
+            <div class="dr-subview" id="dl-score">
+              <div class="score-view">
+                <div class="sc-row"><div class="sc-ring"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/><circle cx="28" cy="28" r="22" fill="none" stroke="#1D9E75" stroke-width="5" stroke-dasharray="107 138" stroke-linecap="round"/></svg><div class="sc-rn">84</div></div><div><div class="sc-lbl">Deal health — <span style="color:#5DCAA5">Strong</span></div><div class="sc-sub">3 items need attention · trending up</div></div></div>
+                <div class="sc-sbar"><div class="sc-sbt"><span>Capital readiness</span><span style="color:#FAC775;font-weight:500">75</span></div><div class="bar-t"><div class="bar-f" style="width:75%;background:#EF9F27"></div></div></div>
+                <div class="sc-sbar"><div class="sc-sbt"><span>Timeline risk</span><span style="color:#F09595;font-weight:500">65</span></div><div class="bar-t"><div class="bar-f" style="width:65%;background:#E24B4A"></div></div></div>
+                <div class="sc-sbar"><div class="sc-sbt"><span>Market strength</span><span style="color:#5DCAA5;font-weight:500">88</span></div><div class="bar-t"><div class="bar-f" style="width:88%;background:#1D9E75"></div></div></div>
+                <div class="sc-sbar"><div class="sc-sbt"><span>Mission alignment</span><span style="color:#5DCAA5;font-weight:500">95</span></div><div class="bar-t"><div class="bar-f" style="width:95%;background:#1D9E75"></div></div></div>
+                <div class="sc-sbar"><div class="sc-sbt"><span>Stakeholder alignment</span><span style="color:#5DCAA5;font-weight:500">80</span></div><div class="bar-t"><div class="bar-f" style="width:80%;background:#1D9E75"></div></div></div>
+              </div>
+            </div>
+            <div class="dr-subview" id="dl-docs">
+              <div class="ms-item" onclick="openRW('loi','Letter of Intent — signed',{t:'doc',n:'Letter of Intent',s:'Signed'})"><div class="msc msd">✓</div><div><div class="ms-n">Letter of Intent (LOI)</div><div class="ms-s">Signed · Mar 12, 2025</div></div></div>
+              <div class="ms-item" onclick="openRW('pf','Pro forma v3',{t:'doc',n:'Pro forma',s:'Current'})"><div class="msc msd">✓</div><div><div class="ms-n">Pro forma financial model v3</div><div class="ms-s">Updated Apr 2, 2025</div></div></div>
+              <div class="ms-item" onclick="openRW('zon','Zoning docs',{t:'doc',n:'Zoning docs',s:'Approved'})"><div class="msc msd">✓</div><div><div class="ms-n">Zoning & entitlement docs</div><div class="ms-s">Approved · City of Chicago</div></div></div>
+              <div class="ms-item" onclick="openRW('bridgeview','Bridgeview CDFI — 1 doc missing',{t:'bridgeview'})"><div class="msc msa">!</div><div><div class="ms-n" style="color:#FAC775">Bridgeview CDFI loan package</div><div class="ms-s" style="color:rgba(239,159,39,.6)">Incomplete — 1 document missing · blocking close</div></div></div>
+              <div class="ms-item" onclick="openRW('greenway','Greenway NMTC — update needed',{t:'greenway'})"><div class="msc msa">!</div><div><div class="ms-n" style="color:#FAC775">Greenway NMTC application update</div><div class="ms-s" style="color:rgba(239,159,39,.6)">Due to allocatee · 9 days overdue</div></div></div>
+              <div class="ms-item" onclick="openRW('gen','Generate lender-ready deal package',{t:'generate'})"><div class="msc mst">+</div><div><div class="ms-n">Lender-ready deal package</div><div class="ms-s">Not yet generated · Real Wisdom can build this now</div></div></div>
+            </div>
+          </div>
+          <div class="dr-right">
+            <div class="rw-panel" id="rw-panel">
+              <div class="rw-ph"><div class="rw-pav">RW</div><div class="rw-pt" id="rw-title">Real Wisdom</div><div class="rw-px" onclick="closeRW()">×</div></div>
+              <div class="rw-pb" id="rw-body"></div>
+              <div class="rw-input-row"><input type="text" placeholder="Ask Real Wisdom a follow-up..." id="rw-input" onkeydown="if(event.key==='Enter')sendRW()"><button onclick="sendRW()" style="font-size:11px;padding:6px 12px;border-radius:7px;border:none;background:var(--teal);color:white;cursor:pointer;font-family:var(--sans)">Send</button></div>
+            </div>
+            <div class="rtabs-wrap" id="rtabs-wrap">
+              <div class="rtabs-tabs">
+                <span class="rttab on" onclick="switchRight('milestones',this)">Milestones</span>
+                <span class="rttab" onclick="switchRight('stakeholders',this)">Stakeholders</span>
+                <span class="rttab" onclick="switchRight('activity',this)">Activity</span>
+              </div>
+              <div class="rtsubview on" id="rt-milestones">
+                <div class="ms-item"><div class="msc msd">✓</div><div><div class="ms-n">Site control</div><div class="ms-s">Property acquired</div><div class="ms-d">Oct 4, 2024</div></div></div>
+                <div class="ms-item"><div class="msc msd">✓</div><div><div class="ms-n">Entitlements & zoning</div><div class="ms-s">Approved · City of Chicago</div><div class="ms-d">Dec 12, 2024</div></div></div>
+                <div class="ms-item"><div class="msc msd">✓</div><div><div class="ms-n">GC selection · Meridian Build Co.</div><div class="ms-s">Contracts signed</div><div class="ms-d">Feb 3, 2025</div></div></div>
+                <div class="ms-item" style="background:rgba(239,159,39,.06)" onclick="openRW('ms_cap','Capital stack close — in progress',{t:'ms',n:'Capital stack close',s:'active'})"><div class="msc msa">!</div><div><div class="ms-n">Capital stack close</div><div class="ms-s" style="color:#FAC775">In progress · 3 days to target</div><div class="ms-d">Target Apr 13, 2025</div></div></div>
+                <div class="ms-item"><div class="msc mst">—</div><div><div class="ms-n">Construction closing</div><div class="ms-s">Pending stack close</div><div class="ms-d">Target Apr 20, 2025</div></div></div>
+                <div class="ms-item"><div class="msc mst">—</div><div><div class="ms-n">Construction start</div><div class="ms-s">Target May 1, 2025</div></div></div>
+                <div class="ms-item"><div class="msc mst">—</div><div><div class="ms-n">Certificate of occupancy</div><div class="ms-s">32 units · 68 families projected</div><div class="ms-d">Target Q1 2026</div></div></div>
+              </div>
+              <div class="rtsubview" id="rt-stakeholders">
+                <div class="ms-item" onclick="openRW('sh_dev','Marcus Tillman',{t:'sh',n:'Marcus Tillman',r:'Developer',s:'2 action items this week'})"><div class="msc" style="background:rgba(29,158,117,.2);color:#5DCAA5">MT</div><div><div class="ms-n">Marcus Tillman</div><div class="ms-s">Developer · 2 action items</div></div></div>
+                <div class="ms-item" onclick="openRW('sh_apex','Apex Impact Fund',{t:'sh',n:'Apex Impact Fund',r:'Lead impact lender',s:'Awaiting Bridgeview resolution'})"><div class="msc" style="background:rgba(55,138,221,.2);color:#85B7EB">AF</div><div><div class="ms-n">Apex Impact Fund</div><div class="ms-s">Lead lender · monitoring</div></div></div>
+                <div class="ms-item" onclick="openRW('bridgeview','Bridgeview CDFI — doc needed',{t:'bridgeview'})"><div class="msc" style="background:rgba(239,159,39,.2);color:#FAC775">BV</div><div><div class="ms-n">Bridgeview CDFI</div><div class="ms-s" style="color:#FAC775">Doc needed — blocking close</div></div></div>
+                <div class="ms-item" onclick="openRW('greenway','Greenway NMTC — 9 days overdue',{t:'greenway'})"><div class="msc" style="background:rgba(226,75,74,.2);color:#F09595">GN</div><div><div class="ms-n">Greenway NMTC Allocatee</div><div class="ms-s" style="color:#F09595">9 days overdue</div></div></div>
+                <div class="ms-item"><div class="msc" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)">MC</div><div><div class="ms-n">Meridian Build Co.</div><div class="ms-s">GC · ready, awaiting closing</div></div></div>
+              </div>
+              <div class="rtsubview" id="rt-activity">
+                <div class="act-item"><div class="act-dot" style="background:#1D9E75"></div><div><div class="act-txt"><strong>Real Wisdom</strong> flagged Bridgeview doc — blocking close in 3 days</div><div class="act-time">Today 8:20 AM</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#5DCAA5"></div><div><div class="act-txt"><strong>Apex Impact Fund</strong> check-in call — developer confidence: high</div><div class="act-time">Yesterday 2:15 PM</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#1D9E75"></div><div><div class="act-txt"><strong>Real Wisdom</strong> identified +$400K unclaimed capacity on Apex loan</div><div class="act-time">Apr 7, 11:30 AM</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#85B7EB"></div><div><div class="act-txt"><strong>Apex team</strong> introduced Marcus to Greenway NMTC allocatee</div><div class="act-time">Mar 28, 3:00 PM</div></div></div>
+                <div class="act-item"><div class="act-dot" style="background:#1D9E75"></div><div><div class="act-txt"><strong>Real Wisdom</strong> logged: belief capital moment — Apex check-in at critical runway point</div><div class="act-time">Mar 15, 4:30 PM</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPLIANCE CHECKLIST TAB -->
+      <div class="df-view" id="dv-checklist">
+        <div class="dr-head">
+          <div><div class="dr-dname">Compliance checklist — Southside Commons</div><div class="dr-dmeta"><span>32 items total</span><span style="color:rgba(255,255,255,.15)">·</span><span style="color:#5DCAA5">23 complete</span><span style="color:rgba(255,255,255,.15)">·</span><span style="color:#FAC775">7 pending</span><span style="color:rgba(255,255,255,.15)">·</span><span style="color:#F09595">2 blocking</span></div></div>
+          <button onclick="openRW('brief','What is blocking my close?',{t:'brief'})" style="font-size:11px;padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--sans)">Fix blockers</button>
+        </div>
+        <div class="dr-rw" onclick="openRW('bridgeview','Fix the 2 blockers now',{t:'bridgeview'})">
+          <div class="dr-rwd"></div>
+          <div class="dr-rwt"><strong>Real Wisdom:</strong> 2 items are blocking your April 13 close. Bridgeview CDFI personal financial statement and Greenway NMTC updated financials. Both fixable today. <span style="color:var(--teal)">Click for exact steps →</span></div>
+        </div>
+        <div style="overflow-y:auto;max-height:360px">
+          <div class="cl-phase">Phase 1 — Pre-development · 8 of 8 complete</div>
+          <div class="cl-item" onclick="openRW('cl1','Site control confirmed',{t:'cl_done'})"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Site control — executed purchase agreement</div><div class="cl-sub">Completed Oct 4, 2024</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Zoning verified — correct land use designation</div><div class="cl-sub">Confirmed · mixed-use affordable permitted</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Environmental phase I assessment</div><div class="cl-sub">Clean · no remediation required</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Architect selection & design contract</div><div class="cl-sub">Signed · Studio Meridian Architecture</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">General contractor selection & bid</div><div class="cl-sub">Executed · Meridian Build Co.</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Pro forma financial model — v3 final</div><div class="cl-sub">Updated Apr 2, 2025</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Community engagement documentation</div><div class="cl-sub">3 sessions completed · report filed</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">City entitlement approvals</div><div class="cl-sub">Approved Dec 12, 2024</div></div></div>
+
+          <div class="cl-phase">Phase 2 — Capital stack · 11 of 13 complete · 2 blocking</div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Apex Impact Fund — commitment letter received</div><div class="cl-sub">$2.1M approved · +$400K available</div></div></div>
+          <div class="cl-item" onclick="openRW('bridgeview','Fix Bridgeview now',{t:'bridgeview'})" style="background:rgba(226,75,74,.05)"><div class="cl-check cl-blocked">✕</div><div><div class="cl-name" style="color:#F09595">Bridgeview CDFI — personal financial statement</div><div class="cl-sub" style="color:rgba(226,75,74,.6)">BLOCKING CLOSE — updated statement required (current on file is 8 months old)</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Cornerstone CF Note — commitment confirmed</div><div class="cl-sub">$450,000 · no conditions outstanding</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Delta TIF Loan — city approval received</div><div class="cl-sub">$900,000 · ordinance passed</div></div></div>
+          <div class="cl-item" onclick="openRW('greenway','Greenway — what is needed',{t:'greenway'})" style="background:rgba(226,75,74,.05)"><div class="cl-check cl-blocked">✕</div><div><div class="cl-name" style="color:#F09595">Greenway NMTC — updated financial projections</div><div class="cl-sub" style="color:rgba(226,75,74,.6)">BLOCKING CLOSE — 9 days overdue to allocatee · call required today</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Harbor TI Prepaid — LOI executed</div><div class="cl-sub">$285,000 · awaiting final docs</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Inland Corridor Grant — award letter received</div><div class="cl-sub">$29,500 · no conditions</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Developer equity — funds verification</div><div class="cl-sub">$220,000 confirmed in escrow</div></div></div>
+          <div class="cl-item" onclick="openRW('gap','Close the $1,200 gap',{t:'gap'})"><div class="cl-check cl-pending">—</div><div><div class="cl-name" style="color:#FAC775">Gap resolution — $1,200 remaining</div><div class="cl-sub" style="color:rgba(239,159,39,.6)">Pending · 3 options available · fastest is developer equity round-up</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Sources & uses table — final version</div><div class="cl-sub">Reviewed by Apex · approved</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Lender title commitments — all sources</div><div class="cl-sub">4 of 4 received</div></div></div>
+
+          <div class="cl-phase">Phase 3 — Construction close · 4 of 7 complete</div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Construction contract — AIA A101 executed</div><div class="cl-sub">Signed · Meridian Build Co.</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Builder's risk insurance binder</div><div class="cl-sub">Issued · $8.4M coverage</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Construction draw schedule — approved by lender</div><div class="cl-sub">12-month schedule · monthly draws</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-done">✓</div><div><div class="cl-name">Payment & performance bonds</div><div class="cl-sub">Issued by Meridian Build Co.</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-pending">—</div><div><div class="cl-name" style="color:#FAC775">Final loan documents — all sources</div><div class="cl-sub" style="color:rgba(239,159,39,.6)">Pending resolution of Bridgeview and Greenway blockers</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-pending">—</div><div><div class="cl-name" style="color:#FAC775">Construction closing date — confirmed by all parties</div><div class="cl-sub" style="color:rgba(239,159,39,.6)">Target April 20 · pending stack close</div></div></div>
+          <div class="cl-item"><div class="cl-check cl-pending">—</div><div><div class="cl-name" style="color:#FAC775">Title insurance policy — issued</div><div class="cl-sub" style="color:rgba(239,159,39,.6)">Pending final loan docs</div></div></div>
+        </div>
+        <div class="cl-summary">
+          <div class="cls"><span style="width:10px;height:10px;border-radius:3px;background:rgba(29,158,117,.3);border:1px solid rgba(29,158,117,.5);display:inline-block"></span><span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:5px">23 complete</span></div>
+          <div class="cls"><span style="width:10px;height:10px;border-radius:3px;background:rgba(239,159,39,.25);border:1px solid rgba(239,159,39,.4);display:inline-block"></span><span style="font-size:11px;color:rgba(255,255,255,.5);margin-left:5px">7 pending</span></div>
+          <div class="cls"><span style="width:10px;height:10px;border-radius:3px;background:rgba(226,75,74,.25);border:1px solid rgba(226,75,74,.4);display:inline-block"></span><span style="font-size:11px;color:#F09595;margin-left:5px;font-weight:500">2 blocking close</span></div>
+        </div>
+      </div>
+
+      <!-- PUBLIC DEAL PROFILE TAB -->
+      <div class="df-view" id="dv-public">
+        <div class="dr-head">
+          <div><div class="dr-dname">Public deal profile — shareable investor page</div><div class="dr-dmeta"><span>What capital sources see when you share this deal</span><span style="color:rgba(255,255,255,.15)">·</span><span style="color:#5DCAA5">No login required</span></div></div>
+          <button style="font-size:11px;padding:5px 12px;border-radius:7px;border:none;background:var(--teal);color:white;cursor:pointer;font-family:var(--sans)">Share deal →</button>
+        </div>
+        <div class="pdp-wrap">
+          <div class="pdp-head">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div>
+                <div class="pdp-title">Southside Commons</div>
+                <div class="pdp-sub">32-unit mixed-income affordable development · Chicago, IL · Developer: Marcus Tillman, Tillman Development Group</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;margin-left:16px">
+                <div style="font-size:22px;font-weight:500;color:#5DCAA5">84</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.35)">Real Impact Score™</div>
+              </div>
+            </div>
+            <div class="pdp-prog-lbl"><span>Funding progress</span><span style="font-weight:500;color:#5DCAA5">$5.9M of $7.2M goal · 82%</span></div>
+            <div class="pdp-prog-t"><div style="width:82%;height:6px;background:var(--teal);border-radius:3px"></div></div>
+            <div class="pdp-ms">
+              <div class="pdp-m"><div class="pdp-mv">$7.2M</div><div class="pdp-ml">Total project</div></div>
+              <div class="pdp-m"><div class="pdp-mv" style="color:#FAC775">Apr 13</div><div class="pdp-ml">Close date</div></div>
+              <div class="pdp-m"><div class="pdp-mv">8%</div><div class="pdp-ml">Target return</div></div>
+            </div>
+          </div>
+          <div class="pdp-section">
+            <div class="pdp-shead">Investment summary</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7">Southside Commons is a 5-story mixed-income affordable development at 1842 S. Wentworth Ave. in Chicago's Near South Side. 32 units — 12 at ≤50% AMI, 20 market rate — over 2,400 sq ft of ground-floor commercial. Located in a designated food desert, the project creates grocery access within 0.3 miles for the first time in 14 years. 24 construction jobs and 8 permanent positions upon lease-up.</div>
+          </div>
+          <div class="pdp-section">
+            <div class="pdp-shead">Developer profile</div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(29,158,117,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5DCAA5;flex-shrink:0">MT</div>
+              <div><div style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">Marcus Tillman · Tillman Development Group</div><div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.55">Chicago-based affordable housing developer. 3 deals completed · $24.2M total deployed · 112 units created · 247 families housed. Developer Real Impact Score: 84 — top 18% of portfolio. 4 years, 3 deals, one relationship that started when the company had $800 left.</div></div>
+            </div>
+          </div>
+          <div class="pdp-section">
+            <div class="pdp-shead">Projected community impact</div>
+            <div class="pdp-impact">
+              <div class="pdp-ic"><div class="pdp-iv">68</div><div class="pdp-il">Families housed</div></div>
+              <div class="pdp-ic"><div class="pdp-iv">24</div><div class="pdp-il">Construction jobs</div></div>
+              <div class="pdp-ic"><div class="pdp-iv">8</div><div class="pdp-il">Permanent positions</div></div>
+              <div class="pdp-ic"><div class="pdp-iv">0.3mi</div><div class="pdp-il">Grocery access (food desert)</div></div>
+            </div>
+          </div>
+          <div class="pdp-cta">
+            <button class="pdp-cta-btn pdp-primary" onclick="switchDemo('marketplace',document.querySelectorAll('.df-ntab')[4])">Connect with this deal →</button>
+            <button class="pdp-cta-btn pdp-secondary" onclick="switchDemo('checklist',document.querySelectorAll('.df-ntab')[1])">View compliance status</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADVISOR TAB -->
+      <div class="df-view" id="dv-advisor">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)">
+          <div class="rw-pav">RW</div>
+          <div><div style="font-size:13px;font-weight:500;color:white">Real Wisdom</div><div style="font-size:11px;color:rgba(255,255,255,.32)">Real estate AI advisor · always on</div></div>
+          <span class="dp dpg" style="margin-left:auto">Active</span>
+        </div>
+        <div class="adv-msgs" id="adv-msgs">
+          <div style="align-self:flex-start;max-width:88%"><div style="font-size:10px;color:rgba(255,255,255,.22);margin-bottom:4px">Real Wisdom</div><div class="mr"><div class="b">Good morning. <strong>Southside Commons</strong> needs attention in 3 areas: Bridgeview CDFI is missing 1 document blocking your close, Greenway NMTC is 9 days overdue — your highest risk — and Apex has $400K unclaimed capacity. What do you want to tackle first?</div></div></div>
+        </div>
+        <div style="padding:0 16px 10px;display:flex;gap:7px;flex-wrap:wrap">
+          <button onclick="addMsg('What document does Bridgeview need?')" style="font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.52);cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='rgba(255,255,255,.52)'">Bridgeview doc</button>
+          <button onclick="addMsg('Draft the Apex email for the additional $400K')" style="font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.52);cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='rgba(255,255,255,.52)'">Draft Apex email</button>
+          <button onclick="addMsg('What are my options if Greenway NMTC falls through?')" style="font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.52);cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='rgba(255,255,255,.52)'">NMTC backup plan</button>
+          <button onclick="addMsg('Close the $1,200 gap — all 3 options')" style="font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.52);cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='rgba(255,255,255,.52)'">Close the gap</button>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px">
+          <input type="text" id="adv-input" placeholder="Ask Real Wisdom anything about your deal..." style="flex:1;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:white;font-family:var(--sans)" onkeydown="if(event.key==='Enter')addMsg(this.value,true)">
+          <button onclick="addMsg(document.getElementById('adv-input').value,true)" style="font-size:12px;padding:8px 16px;border-radius:8px;border:none;background:var(--teal);color:white;cursor:pointer;font-family:var(--sans)">Send</button>
+        </div>
+      </div>
+
+      <!-- MARKETPLACE TAB -->
+      <div class="df-view" id="dv-marketplace">
+        <div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:center">
+          <input type="text" placeholder="Search by name, type, location, deal size..." style="flex:1;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:white;font-family:var(--sans)">
+          <div style="font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0">Matched to: 32 units · mixed-income · Chicago</div>
+        </div>
+        <div style="padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(29,158,117,.2);color:#5DCAA5;cursor:pointer">Affordable housing</span>
+          <span style="font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.38);cursor:pointer">Impact funds</span>
+          <span style="font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.38);cursor:pointer">CDFI loans</span>
+          <span style="font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.38);cursor:pointer">Tax credit equity</span>
+          <span style="font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.38);cursor:pointer">Government grants</span>
+        </div>
+        <div style="padding:6px 16px 4px;font-size:10px;font-weight:600;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.08em">6 best matches — sorted by fit score</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px 16px;overflow-y:auto;max-height:360px">
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.background='rgba(29,158,117,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_iha','Illinois Housing Authority — 92% match',{t:'mkt',n:'Illinois Housing Authority',match:'92%',type:'State agency · Tax credits',range:'$400K–$4M',desc:'LIHTC allocation for affordable projects statewide. Your deal qualifies for the current round — application window closes June 30. Real Wisdom confirms 92% of eligibility criteria met.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:white">Illinois Housing Authority</div><div style="font-size:13px;font-weight:600;color:#5DCAA5">92%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.55;margin-bottom:9px">LIHTC allocation · $400K–$4M · Window closes June 30 — your deal qualifies now</div>
+            <div style="display:flex;gap:5px"><span class="dp dpb">Tax credits</span><span class="dp dpg">State</span></div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.background='rgba(29,158,117,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_apex','Apex Community Foundation — 87%',{t:'mkt',n:'Apex Community Foundation',match:'87%',type:'Foundation · PRI loans',range:'$200K–$1.5M',desc:'Already in your deal stack — +$400K additional capacity available through the PRI program. Request the increase before closing this week.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:white">Apex Community Foundation</div><div style="font-size:13px;font-weight:600;color:#5DCAA5">87%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.55;margin-bottom:9px">Foundation PRI · $200K–$1.5M · Already in your stack — +$400K available</div>
+            <div style="display:flex;gap:5px"><span class="dp" style="background:rgba(127,119,221,.2);color:#AFA9EC">Foundation</span><span class="dp dpg">PRI</span></div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.background='rgba(29,158,117,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_gla','Great Lakes CDFI Alliance — 78%',{t:'mkt',n:'Great Lakes CDFI Alliance',match:'78%',type:'CDFI network · Impact loans',range:'$100K–$1.2M',desc:'Bridgeview CDFI is already in your stack via this network. 4 alternative members active in Chicago if Bridgeview falls through.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:white">Great Lakes CDFI Alliance</div><div style="font-size:13px;font-weight:600;color:#5DCAA5">78%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.55;margin-bottom:9px">CDFI network · $100K–$1.2M · Bridgeview is in your stack via this network</div>
+            <div style="display:flex;gap:5px"><span class="dp dpg">CDFI</span><span class="dp dpb">Impact</span></div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.background='rgba(29,158,117,.06)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_uiv','Urban Impact Ventures — 74%',{t:'mkt',n:'Urban Impact Ventures',match:'74%',type:'Impact equity · Co-investment',range:'$300K–$800K',desc:'Best NMTC backup if Greenway falls through. Chicago-focused, BIPOC developer priority, moves fast on mission-aligned deals.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:white">Urban Impact Ventures</div><div style="font-size:13px;font-weight:600;color:#5DCAA5">74%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.55;margin-bottom:9px">Impact equity · $300K–$800K · Best Greenway backup — moves fast on Chicago deals</div>
+            <div style="display:flex;gap:5px"><span class="dp" style="background:rgba(127,119,221,.2);color:#AFA9EC">Equity</span><span class="dp dpg">Impact</span></div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_metro','Metro Corridor Grant — 67%',{t:'mkt',n:'Metro Corridor Grant Program',match:'67%',type:'City · Grant',range:'$20K–$120K',desc:'Your site is in an eligible commercial corridor. Supplemental round open through May 31. Small amount but zero dilution.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:rgba(255,255,255,.55)">Metro Corridor Grant Program</div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.4)">67%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.55;margin-bottom:9px">City grant · $20K–$120K · Your site is in an eligible corridor</div>
+            <div style="display:flex;gap:5px"><span class="dp dpa">Grant</span><span class="dp dpg">City</span></div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='transparent'" onclick="openRW('mkt_ccp','Community Capital Partners — 61%',{t:'mkt',n:'Community Capital Partners',match:'61%',type:'Foundation · Subsidy capital',range:'$400K–$2.5M',desc:'Requires institutional partnership — your Apex relationship opens this door. Strong candidate for a future round once Southside Commons closes.'})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="font-size:13px;font-weight:500;color:rgba(255,255,255,.55)">Community Capital Partners</div><div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.4)">61%</div></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.55;margin-bottom:9px">Subsidy capital · $400K–$2.5M · Apex relationship opens this door</div>
+            <div style="display:flex;gap:5px"><span class="dp" style="background:rgba(127,119,221,.2);color:#AFA9EC">Foundation</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PORTFOLIO TAB -->
+      <div class="df-view" id="dv-portfolio">
+        <div class="port-view">
+          <div class="pv-ms">
+            <div class="pv-m"><div class="pv-ml">Active deals</div><div class="pv-mv" style="color:white">14</div></div>
+            <div class="pv-m"><div class="pv-ml">Capital deployed</div><div class="pv-mv" style="color:white">$42.3M</div></div>
+            <div class="pv-m"><div class="pv-ml">Avg deal health</div><div class="pv-mv" style="color:#5DCAA5">76</div></div>
+            <div class="pv-m"><div class="pv-ml">Fund impact score</div><div class="pv-mv" style="color:#5DCAA5">91</div></div>
+          </div>
+          <div class="dr-rw" onclick="openRW('port_brief','Portfolio brief',{t:'port_brief'})">
+            <div class="dr-rwd"></div>
+            <div class="dr-rwt"><strong>Real Wisdom:</strong> <strong>Northside Village</strong> stalled on zoning 90 days. <strong>Riverwest Mixed-Use</strong> has $1.2M gap no source. <strong>Southside Commons</strong> — Bridgeview doc, close in 3 days. All 11 other deals on track.</div>
+          </div>
+          <div style="overflow-y:auto;max-height:320px">
+            <table class="ptable">
+              <thead><tr><th style="width:26%">Deal</th><th style="width:14%">Developer</th><th style="width:13%">Stage</th><th style="width:16%">Capital</th><th style="width:10%">Health</th><th style="width:10%">RIS</th><th style="width:11%">Status</th></tr></thead>
+              <tbody>
+                <tr onclick="switchDemo('deal',document.querySelectorAll('.df-ntab')[0])"><td><div style="font-weight:500;font-size:12px;color:white">Southside Commons</div><div style="font-size:10px;color:rgba(255,255,255,.32)">32 units · Chicago</div></td><td style="font-size:11px;color:rgba(255,255,255,.38)">M. Tillman</td><td><span class="dp dpa">Cap close</span></td><td style="font-size:11px">$7.2M <span style="color:#FAC775">82%</span></td><td style="font-size:12px;font-weight:500;color:#5DCAA5">84</td><td style="font-size:12px;font-weight:500;color:#5DCAA5">84</td><td><span class="dp dpa">Action</span></td></tr>
+                <tr onclick="openRW('northside','Northside Village — zoning stalled',{t:'port_deal',n:'Northside Village',issue:'Zoning stalled 90 days — traffic study due Friday'})"><td><div style="font-weight:500;font-size:12px;color:white">Northside Village</div><div style="font-size:10px;color:rgba(255,255,255,.32)">48 units · Chicago</div></td><td style="font-size:11px;color:rgba(255,255,255,.38)">D. Rivera</td><td><span class="dp dpr">Stalled</span></td><td style="font-size:11px">$18.5M <span style="color:#5DCAA5">71%</span></td><td style="font-size:12px;font-weight:500;color:#FAC775">61</td><td style="font-size:12px;font-weight:500;color:#FAC775">78</td><td><span class="dp dpr">At risk</span></td></tr>
+                <tr onclick="openRW('riverwest','Riverwest Mixed-Use — $1.2M gap',{t:'port_deal',n:'Riverwest Mixed-Use',issue:'$1.2M capital gap — IHA application due May 15'})"><td><div style="font-weight:500;font-size:12px;color:white">Riverwest Mixed-Use</div><div style="font-size:10px;color:rgba(255,255,255,.32)">36 units · Milwaukee</div></td><td style="font-size:11px;color:rgba(255,255,255,.38)">J. Okafor</td><td><span class="dp dpa">Cap close</span></td><td style="font-size:11px">$14.2M <span style="color:#F09595">gap $1.2M</span></td><td style="font-size:12px;font-weight:500;color:#F09595">54</td><td style="font-size:12px;font-weight:500;color:#FAC775">68</td><td><span class="dp dpr">At risk</span></td></tr>
+                <tr><td><div style="font-weight:500;font-size:12px;color:white">Lakeside Flats</div><div style="font-size:10px;color:rgba(255,255,255,.32)">60 units · Chicago</div></td><td style="font-size:11px;color:rgba(255,255,255,.38)">K. Washington</td><td><span class="dp dpg">Construction</span></td><td style="font-size:11px">$22.0M <span style="color:#5DCAA5">100%</span></td><td style="font-size:12px;font-weight:500;color:#5DCAA5">91</td><td style="font-size:12px;font-weight:500;color:#5DCAA5">87</td><td><span class="dp dpg">Healthy</span></td></tr>
+                <tr><td><div style="font-weight:500;font-size:12px;color:white">Eastpark Homes</div><div style="font-size:10px;color:rgba(255,255,255,.32)">24 units · Evanston</div></td><td style="font-size:11px;color:rgba(255,255,255,.38)">D. Chen</td><td><span class="dp dpg">On track</span></td><td style="font-size:11px">$8.1M <span style="color:#5DCAA5">82%</span></td><td style="font-size:12px;font-weight:500;color:#5DCAA5">85</td><td style="font-size:12px;font-weight:500;color:#5DCAA5">91</td><td><span class="dp dpg">Healthy</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPITAL MARKETPLACE SECTION -->
+<section class="mkt-s" id="marketplace">
+  <div class="si">
+    <div class="ey fu">Capital marketplace</div>
+    <h2 class="sh fu s1">The right capital<br>finds the right deal.</h2>
+    <p class="ss fu s2">Most developers spend months chasing sources they half-qualify for. Realtor Wisdom matches every deal to the capital it's actually eligible for — ranked by fit, explained by Real Wisdom, and connected in one click.</p>
+    <div class="mkt-2col">
+      <div class="mkt-how fu s1">
+        <div class="mkt-step"><div class="mkt-step-n">1</div><div><div class="mkt-step-t">Your deal profile is your application</div><div class="mkt-step-d">Everything in your deal room — unit count, AMI targeting, location, developer profile, capital stack — becomes the filter. No separate intake form. No re-entry.</div></div></div>
+        <div class="mkt-step"><div class="mkt-step-n">2</div><div><div class="mkt-step-t">Real Wisdom scores every match</div><div class="mkt-step-d">Each source is scored against your specific deal. A 92% match means 92% of eligibility criteria are confirmed. Real Wisdom explains every gap before you apply.</div></div></div>
+        <div class="mkt-step"><div class="mkt-step-n">3</div><div><div class="mkt-step-t">Add to your stack in one click</div><div class="mkt-step-d">Every marketplace source connects directly to your deal room. Track, monitor, and follow up — all in one place from the moment you find a match.</div></div></div>
+        <div class="mkt-step"><div class="mkt-step-n">4</div><div><div class="mkt-step-t">Network access without the network</div><div class="mkt-step-d">CDFIs, impact funds, state agencies, foundations — sources that took experienced developers decades to build. Available day one to every developer on the platform.</div></div></div>
+        <div class="mkt-pull">
+          <div class="mkt-pull-ey">Why this matters</div>
+          <div class="mkt-pull-q">"The right deal never finds the right capital because nobody made the introduction. Realtor Wisdom makes the introduction — at scale, for every developer, on every deal."</div>
+        </div>
+      </div>
+      <div class="mkt-cards fu s2">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Matched sources — Southside Commons · 32 units · Chicago</div>
+        <div class="mkt-card"><div class="mkt-card-top"><div class="mkt-card-name">Illinois Housing Authority</div><div class="mkt-card-match">92% match</div></div><div class="mkt-card-desc">State tax credit allocation · $400K–$4M · Window closes June 30 — qualifies now</div><div class="mkt-bar-t"><div class="mkt-bar-f" style="width:92%;background:var(--teal)"></div></div></div>
+        <div class="mkt-card"><div class="mkt-card-top"><div class="mkt-card-name">Apex Community Foundation</div><div class="mkt-card-match">87% match</div></div><div class="mkt-card-desc">Foundation PRI loan · $200K–$1.5M · Already in stack — +$400K available</div><div class="mkt-bar-t"><div class="mkt-bar-f" style="width:87%;background:var(--teal)"></div></div></div>
+        <div class="mkt-card"><div class="mkt-card-top"><div class="mkt-card-name">Great Lakes CDFI Alliance</div><div class="mkt-card-match">78% match</div></div><div class="mkt-card-desc">CDFI network · $100K–$1.2M · Best backup if Bridgeview falls through</div><div class="mkt-bar-t"><div class="mkt-bar-f" style="width:78%;background:var(--teal)"></div></div></div>
+        <div class="mkt-card"><div class="mkt-card-top"><div class="mkt-card-name">Urban Impact Ventures</div><div class="mkt-card-match">74% match</div></div><div class="mkt-card-desc">Impact equity co-investment · $300K–$800K · Best NMTC alternative</div><div class="mkt-bar-t"><div class="mkt-bar-f" style="width:74%;background:var(--teal)"></div></div></div>
+        <div class="mkt-card" style="opacity:.55"><div class="mkt-card-top"><div class="mkt-card-name">Metro Corridor Grant Program</div><div class="mkt-card-match" style="color:rgba(255,255,255,.4)">67% match</div></div><div class="mkt-card-desc">City grant · $20K–$120K · Eligible corridor · Window May 31</div><div class="mkt-bar-t"><div class="mkt-bar-f" style="width:67%;background:rgba(255,255,255,.3)"></div></div></div>
+        <div class="mkt-more">+ 31 more sources across CDFI, equity, grant, and debt categories</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO WE SERVE -->
+<section class="serve-s" id="who-we-serve">
+  <div class="si">
+    <div class="ey fu">Who we serve</div>
+    <h2 class="sh fu s1">Built for every stakeholder<br>in the value chain.</h2>
+    <p class="ss fu s2">Six different perspectives. One connected system. Every action taken improves the whole.</p>
+    <div class="serve-grid">
+      <div class="scard fu s1"><div class="scard-av" style="background:var(--tl);color:var(--td)">DO</div><h3>Developers & operators</h3><p>The builders. From first site visit to final occupancy — with Real Wisdom in the room at every step.</p><div class="scard-gets"><div class="sg">Living deal room with capital stack tracker</div><div class="sg">Real Wisdom AI — proactive, always on</div><div class="sg">Capital marketplace — matched, not searched</div><div class="sg">Developer Real Impact Score — your story told</div></div></div>
+      <div class="scard fu s2"><div class="scard-av" style="background:var(--bl);color:var(--bd)">IF</div><h3>Impact funds & CDFIs</h3><p>The capital stewards. Real-time visibility across every deal, every relationship, every community outcome.</p><div class="scard-gets"><div class="sg">Portfolio intelligence dashboard</div><div class="sg">Fund Real Impact Score™ — full legacy measured</div><div class="sg">Belief capital and network activation logging</div><div class="sg">Early warning before risk becomes loss</div></div></div>
+      <div class="scard fu s3"><div class="scard-av" style="background:var(--pl);color:var(--pd)">LI</div><h3>Lenders & institutions</h3><p>The risk managers. Smarter underwriting powered by deal data, not static credit models.</p><div class="scard-gets"><div class="sg">Real-time borrower and asset intelligence</div><div class="sg">AI-assisted underwriting and deal scoring</div><div class="sg">Early warning system for portfolio stress</div><div class="sg">Post-close monitoring — never fly blind again</div></div></div>
+      <div class="scard fu s1"><div class="scard-av" style="background:var(--al);color:var(--ad)">GA</div><h3>Government & housing agencies</h3><p>The mission anchors. Visibility into how grants and subsidies are actually performing in the real world.</p><div class="scard-gets"><div class="sg">Grant tracking and capital deployment visibility</div><div class="sg">Developer readiness scores for next rounds</div><div class="sg">Community impact measurement and reporting</div><div class="sg">Capital flow intelligence across the ecosystem</div></div></div>
+      <div class="scard fu s2" style="border-color:var(--teal)"><div style="font-size:10px;font-weight:700;color:var(--teal);background:var(--tl);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em">Mission critical</div><div class="scard-av" style="background:var(--tl);color:var(--td)">ED</div><h3>Emerging & underserved developers</h3><p>The ones the system has failed. The same intelligence, capital access, and advisory quality as operators who've been in the room for decades — on day one.</p><div class="scard-gets"><div class="sg">Full platform access from the first deal</div><div class="sg">Capital marketplace — no gatekeeping</div><div class="sg">Real Wisdom coaching tailored to their stage</div><div class="sg">Impact Score to track and prove growth</div></div></div>
+      <div class="scard fu s3"><div class="scard-av" style="background:var(--pl);color:var(--pd)">AC</div><h3>Accelerators & mentorship orgs</h3><p>The ecosystem builders. Run entire developer cohorts — tracking progress, connecting capital, measuring impact at scale.</p><div class="scard-gets"><div class="sg">Cohort management and progress tracking</div><div class="sg">Capital connections for every developer</div><div class="sg">Belief capital logging across the portfolio</div><div class="sg">Program impact measurement — their story too</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-s">
+  <div class="stats-inner">
+    <div class="stats-grid fu">
+      <div class="stat-cell"><div class="stat-n">$326T</div><div class="stat-l">Global real estate value —<br>the world's largest asset class</div></div>
+      <div class="stat-cell"><div class="stat-n">$4.5T</div><div class="stat-l">Annual US commercial real<br>estate transactions</div></div>
+      <div class="stat-cell"><div class="stat-n">7M+</div><div class="stat-l">Real estate businesses in the US<br>with no unified operating system</div></div>
+    </div>
+    <div class="case-study fu s1">
+      <div>
+        <div class="cs-ey">Case study</div>
+        <h3 class="cs-t">Southside Commons<br>32 units · Chicago, IL</h3>
+        <p class="cs-sub">From 11-source spreadsheet to fully tracked deal room. Developer Real Impact Score: 84. Fund score: 91.</p>
+      </div>
+      <div class="cs-results">
+        <div class="cs-r"><span>247 families housed across 3 deals — developer grew from 0 to 84 Real Impact Score in 4 years, all upstream activity tracked for the first time</span></div>
+        <div class="cs-r"><span>Capital stack from 45% to 94% in 30 days — Real Wisdom surfaced $400K in unclaimed capacity on an approved source</span></div>
+        <div class="cs-r"><span>23 belief capital moments logged — each traceable to downstream outcomes worth millions</span></div>
+        <div class="cs-r"><span>68 families projected to be housed · 24 construction jobs · food desert corridor finally served</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="mani-s" id="manifesto">
+  <div class="si">
+    <div class="mani-inner">
+      <div class="ey fu">The manifesto</div>
+      <h2 class="sh fu s1">Real estate is broken.<br>We are building the fix.</h2>
+      <p class="mp fu s2">Real estate is the largest asset class on earth — <strong>$326 trillion in global value</strong>. It builds generational wealth, houses families, anchors communities, and drives local economies everywhere it touches. And yet the industry that manages all of this still runs on spreadsheets, weekly calls, disconnected tools, and relationships locked inside people's heads.</p>
+      <p class="mp fu">We are not here to add another tool to that pile. We are here to replace the infrastructure entirely.</p>
+      <div class="mpull fu">"Every door that has been closed to an underserved developer because they lacked the right connections — that is a family that did not get housed. That is generational wealth that was never created."</div>
+      <p class="mp fu">The information already exists. Market trends. Comparable sales. Rental data. Financing structures. Capital availability. But it is scattered, hidden, and underutilized. We exist to unify it — to transform raw data into clear, actionable intelligence accessible to everyone, not just the insiders who were born into the network.</p>
+      <p class="mp fu">The mission and the business are not in tension. <strong>They are the same thing.</strong> When the right developer finds the right capital at the right moment, communities are built, wealth is created, and the ecosystem gets stronger for everyone in it.</p>
+      <p class="mp fu">And for the first time, we can measure it. Not just the jobs and the units — but the conversation that started everything. The belief capital moment. The bridge loan that kept a company alive long enough to become a thriving business serving thousands. <strong>The Real Impact Score</strong> is the first metric in real estate investing that captures the full causal chain. A fund's score is not its IRR. It is its legacy.</p>
+      <div class="mclose fu">
+        <p>We are not building a better spreadsheet.</p>
+        <p>We are building the infrastructure that makes spreadsheets obsolete.</p>
+        <p style="margin-top:20px;font-size:clamp(17px,2.2vw,24px);color:rgba(255,255,255,.45)">Real estate shapes the world.</p>
+        <p>Realtor Wisdom shapes real estate.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-s">
+  <div class="cta-glow"></div>
+  <div class="cta-inner">
+    <h2>Stop chasing capital.<br>Start closing deals.</h2>
+    <p>Realtor Wisdom gives developers, institutions, and capital providers the intelligence they need — and the infrastructure they've never had.</p>
+    <div class="cta-btns">
+      <a href="#demo" class="btn-p" style="font-size:16px;padding:15px 32px">See the live demo</a>
+      <a href="#manifesto" class="btn-o" style="font-size:16px;padding:15px 32px">Read the manifesto</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fi">
+    <div class="ft-top">
+      <div><div class="ft-logo">Realtor <em>Wisdom</em></div><p class="ft-tag">Data · Action · Connectivity<br><br>Making every real estate decision smarter, clearer, and more equitable. The intelligence layer the industry has always needed — and the Real Impact Score it has never had.</p></div>
+      <div class="footer-col"><div class="fc-title">Platform</div><a href="#modules">Deal Room</a><a href="#modules">Real Wisdom AI</a><a href="#marketplace">Capital Marketplace</a><a href="#modules">Institution View</a><a href="#impact-score">Real Impact Score™</a></div>
+      <div class="footer-col"><div class="fc-title">Company</div><a href="#manifesto">Manifesto</a><a href="#who-we-serve">For institutions</a><a href="#who-we-serve">For developers</a><a href="#demo">Request access</a></div>
+      <div class="footer-col"><div class="fc-title">Built for</div><a href="#who-we-serve">Developers & operators</a><a href="#who-we-serve">Impact funds & CDFIs</a><a href="#who-we-serve">Lenders</a><a href="#who-we-serve">Government agencies</a><a href="#who-we-serve">Accelerators</a></div>
+    </div>
+    <div class="ft-bot">
+      <span class="ft-copy">© 2026 Realtor Wisdom. All rights reserved.</span>
+      <span class="ft-mission">Built for real estate. Driven by impact.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40));
+const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');obs.unobserve(x.target)}}),{threshold:.1,rootMargin:'0px 0px -32px 0px'});
+document.querySelectorAll('.fu').forEach(el=>obs.observe(el));
+const barObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.bar-f[data-w]').forEach(b=>{setTimeout(()=>{b.style.width=b.dataset.w+'%'},100)});barObs.unobserve(x.target)}}),{threshold:.2});
+document.querySelectorAll('.ris-2col,.ris-dims,.score-view').forEach(el=>barObs.observe(el));
+document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}}));
+
+function switchDemo(id,tab){
+  document.querySelectorAll('.df-view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.df-ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('dv-'+id).classList.add('on');
+  if(tab)tab.classList.add('on');
+}
+function switchLeft(id,tab){
+  document.querySelectorAll('[id^="dl-"]').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.dr-ptab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('dl-'+id).classList.add('on');
+  if(tab)tab.classList.add('on');
+}
+function switchRight(id,tab){
+  document.querySelectorAll('[id^="rt-"]').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.rttab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('rt-'+id).classList.add('on');
+  if(tab)tab.classList.add('on');
+  closeRW();
+}
+
+var rwContent={
+  brief:{t:"Today's full action plan",b:`<div class="rw-msg">Here are your <strong>4 priorities</strong> for today, ranked by urgency.</div><div class="rw-opt" onclick="openRW('bridgeview','Fix Bridgeview doc',{t:'bridgeview'})"><div class="rw-onum">Priority 1 · Today · Blocking</div><div class="rw-otitle">Submit missing Bridgeview CDFI document</div><div class="rw-obody">Updated personal financial statement — your current one is 8 months old. They require one within 90 days. I can identify the exact document and draft the cover note.</div><span class="rw-badge" style="background:rgba(226,75,74,.2);color:#F09595">Blocking your close</span></div><div class="rw-opt" onclick="openRW('greenway','Greenway NMTC — call today',{t:'greenway'})"><div class="rw-onum">Priority 2 · Today · Highest risk</div><div class="rw-otitle">Call Greenway NMTC allocatee — 9 days overdue</div><div class="rw-obody">$1.7M at 9 days of silence is your highest risk. Call first, follow with email. Draft ready below.</div><span class="rw-badge" style="background:rgba(226,75,74,.2);color:#F09595">Highest risk</span></div><div class="rw-opt" onclick="openRW('apex','Request Apex +$400K',{t:'apex'})"><div class="rw-onum">Priority 3 · This week</div><div class="rw-otitle">Request +$400K from Apex Impact Fund</div><div class="rw-obody">$400K of capacity already available. One email. Draft ready.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Easy win</span></div><div class="rw-opt" onclick="openRW('gap','Close the $1,200 gap',{t:'gap'})"><div class="rw-onum">Priority 4 · Do now · 5 minutes</div><div class="rw-otitle">Close the $1,200 remaining gap</div><div class="rw-obody">Round up developer equity from $220K to $221,200. It's almost certainly a preincurred cost. Document it today.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Do now</span></div>`},
+  gap:{t:'Close the $1,200 gap — 3 options',b:`<div class="rw-msg">The $1,200 gap is your <strong>fastest win</strong>. Three options ranked by speed.</div><div class="rw-opt"><div class="rw-onum">Option 1 · Recommended · Today</div><div class="rw-otitle">Round up developer equity to $221,200</div><div class="rw-obody">This $1,200 is almost certainly already a preincurred cost — document it today. No external approval, no delay.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Fastest · do now</span></div><div class="rw-opt"><div class="rw-onum">Option 2 · 3 days</div><div class="rw-otitle">Micro-increase from Cornerstone CF Note</div><div class="rw-obody">You have an approved relationship. $1,200 is trivial to them. One email closes it.</div><span class="rw-badge" style="background:rgba(239,159,39,.18);color:#FAC775">Low risk</span></div><div class="rw-opt"><div class="rw-onum">Option 3 · Coordinate with GC</div><div class="rw-otitle">Trim a cost line on the uses side</div><div class="rw-obody">Check with Meridian Build Co. on material allowance flexibility — if one line can move $1,200, the gap disappears without touching sources.</div></div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','Back to full action plan',{t:'brief'})">Back to full action plan →</button></div>`},
+  apex:{t:'Apex Impact Fund — +$400K available',b:`<div class="rw-msg">Your Apex loan has <strong>$400K of unclaimed capacity</strong>. Draft email ready:</div><div style="border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:13px;margin-bottom:12px;background:rgba(255,255,255,.04)"><div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Draft — ready to send</div><div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px"><strong style="color:rgba(255,255,255,.7)">Subject:</strong> Southside Commons — loan increase request</div><div style="font-size:13px;color:rgba(255,255,255,.72);line-height:1.7">"Dear Apex team, Following up on our Impact Fund loan for Southside Commons. We'd like to formally request the additional $400,000 in available capacity, bringing our total to $2.5M. We're targeting April 20 for construction closing. Please let us know what documentation you need — happy to connect this week."</div></div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('gap','Now close the $1,200 gap',{t:'gap'})">Now close the $1,200 gap →</button></div>`},
+  bridgeview:{t:'Bridgeview CDFI — 1 document missing',b:`<div class="rw-msg">Bridgeview needs <strong>1 document</strong> — this is blocking your construction close in 3 days.</div><div class="rw-opt"><div class="rw-onum">Missing document</div><div class="rw-otitle">Updated personal financial statement</div><div class="rw-obody">Required for each principal with >20% ownership. Your existing statement is 8 months old — they require one within 90 days of close. Get this to them today.</div><span class="rw-badge" style="background:rgba(226,75,74,.2);color:#F09595">Blocking close — fix today</span></div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','Back to full action plan',{t:'brief'})">Back to full action plan →</button><button class="rw-qbtn" onclick="openRW('gap','Also close the $1,200 gap',{t:'gap'})">Also close the $1,200 gap →</button></div>`},
+  greenway:{t:'Greenway NMTC — 9 days overdue',b:`<div class="rw-msg">Greenway ($1.7M) is your <strong>highest risk item</strong>. 9 days of silence. Act today.</div><div class="rw-opt"><div class="rw-onum">Action · Today</div><div class="rw-otitle">Call the allocatee directly, then send this:</div><div class="rw-obody" style="font-style:italic;color:rgba(255,255,255,.6)">"Hi [name], following up on Southside Commons NMTC allocation. We're targeting April 20 for construction close and want to ensure alignment on your timeline. Are there any additional items needed to finalize the commitment? Happy to connect this week."</div></div><div class="rw-opt"><div class="rw-onum">If Greenway falls through — activate now</div><div class="rw-otitle">3 backup paths · start IHA this week regardless</div><div class="rw-obody"><strong style="color:white">Illinois Housing Authority</strong> — 91% match, $4M max, you qualify today.<br><strong style="color:white">Urban Impact Ventures</strong> — $800K equity, moves fast.<br><strong style="color:white">Great Lakes CDFI Alliance</strong> — $1.5M, 78% match.<br><br>IHA + Urban Impact covers the full $1.7M. Start IHA as a parallel track this week regardless of Greenway outcome.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Start IHA parallel track now</span></div>`},
+  score:{t:'Deal health score — 84',b:`<div class="rw-msg">Your score of <strong style="color:#5DCAA5">84</strong> is strong — top 18% of portfolio. Two items pulling it below 90.</div><div class="rw-opt"><div class="rw-onum">Biggest drag · −8 points</div><div class="rw-otitle">Timeline risk: 65 — Greenway overdue</div><div class="rw-obody">Resolving Greenway this week recovers ~8 points. Every day of silence increases timeline risk.</div><span class="rw-badge" style="background:rgba(226,75,74,.2);color:#F09595">Fix this first</span></div><div class="rw-opt"><div class="rw-onum">Second drag · −5 points</div><div class="rw-otitle">Capital readiness: 75 — Bridgeview pending</div><div class="rw-obody">Confirming Bridgeview pushes capital readiness from 75 to 90+. One document away.</div><span class="rw-badge" style="background:rgba(239,159,39,.18);color:#FAC775">One document away</span></div><div class="rw-opt"><div class="rw-onum">Strongest driver · +10 points</div><div class="rw-otitle">Mission alignment: 95 — your competitive advantage</div><div class="rw-obody">Opens access to IHA, NM Foundation, and full CDFI network. This is what makes your deal fundable.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Your biggest asset</span></div>`},
+  port_brief:{t:'Portfolio brief — 3 deals need attention',b:`<div class="rw-msg">Fund impact score <strong style="color:#5DCAA5">91</strong> — top 5% nationally. Three deals need attention this week.</div><div class="rw-opt"><div class="rw-onum">Priority 1 · Today</div><div class="rw-otitle">Help Marcus close Southside Commons</div><div class="rw-obody">3 days to closing. Bridgeview doc missing. Call from your team unlocks this today. This is a belief capital moment — show up.</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">20 min · high impact</span></div><div class="rw-opt"><div class="rw-onum">Priority 2 · This week</div><div class="rw-otitle">Northside Village — zoning stalled 90 days</div><div class="rw-obody">Traffic study due Friday. Desiree needs a real conversation — not a status email. Your call this week is the belief capital moment for her.</div><span class="rw-badge" style="background:rgba(226,75,74,.2);color:#F09595">At risk</span></div><div class="rw-opt"><div class="rw-onum">Priority 3 · Before May 15</div><div class="rw-otitle">Riverwest Mixed-Use — $1.2M gap, IHA window closing</div><div class="rw-obody">IHA supplemental gap financing, James qualifies. Application window closes May 15. Start now.</div><span class="rw-badge" style="background:rgba(239,159,39,.18);color:#FAC775">Act before May 15</span></div>`},
+  generate:{t:'Generate deal package',b:`<div class="rw-msg">I can generate a <strong>lender-ready deal package</strong> for Southside Commons in minutes.</div><div class="rw-opt"><div class="rw-onum">Package contents</div><div class="rw-otitle">Complete deal package — auto-generated</div><div class="rw-obody">Executive summary · Pro forma · Sources & uses · Capital stack status · Developer track record · Community impact projections · Market analysis · Site information</div><span class="rw-badge" style="background:rgba(29,158,117,.2);color:#5DCAA5">Ready in minutes</span></div><div class="rw-qbtns"><button class="rw-qbtn">Generate the deal package now →</button></div>`},
+  cl_done:{t:'Item complete',b:`<div class="rw-msg">This item is complete. No action required.</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','What else needs attention?',{t:'brief'})">What else needs attention? →</button></div>`}
+};
+function getRW(type,ctx){
+  if(rwContent[type])return rwContent[type];
+  if(type==='source')return{t:ctx.n+' — '+ctx.s,b:`<div class="rw-msg"><strong>${ctx.n}</strong> is currently <strong style="color:#5DCAA5">${ctx.s}</strong> at <strong>${ctx.a}</strong>.</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','See today\\'s action plan',{t:'brief'})">See today's action plan →</button></div>`};
+  if(type==='ms')return{t:ctx.n,b:`<div class="rw-msg">Milestone: <strong>${ctx.n}</strong><br><br>${ctx.s==='done'?'Completed.':ctx.s==='active'?'Currently active — target: '+ctx.d:'Pending prior milestones.'}</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','What do I do next?',{t:'brief'})">What do I do next? →</button></div>`};
+  if(type==='sh')return{t:ctx.n,b:`<div class="rw-msg"><strong>${ctx.n}</strong> — ${ctx.r}<br><br>${ctx.s}</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','See full action plan',{t:'brief'})">See full action plan →</button></div>`};
+  if(type==='score_dim')return{t:ctx.d+' — '+ctx.v,b:`<div class="rw-msg"><strong>${ctx.d}</strong> is at <strong style="color:${ctx.v>=80?'#5DCAA5':ctx.v>=65?'#FAC775':'#F09595'}">${ctx.v}</strong>.</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('score','Full deal score breakdown',{t:'score'})">See full score →</button></div>`};
+  if(type==='port_deal')return{t:ctx.n,b:`<div class="rw-msg"><strong>${ctx.n}</strong><br><br>${ctx.issue}</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('port_brief','Full portfolio brief',{t:'port_brief'})">See portfolio brief →</button></div>`};
+  if(type==='doc')return{t:ctx.n+' — '+ctx.s,b:`<div class="rw-msg"><strong>${ctx.n}</strong> is <strong style="color:#5DCAA5">${ctx.s}</strong>.</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','See today\\'s action plan',{t:'brief'})">See today's action plan →</button></div>`};
+  if(type==='mkt')return{t:ctx.n+' — '+ctx.match+' match',b:`<div class="rw-msg"><strong>${ctx.n}</strong> is a <strong style="color:#5DCAA5">${ctx.match} match</strong> for Southside Commons.</div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:12px"><div style="font-size:10px;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Source details</div><div style="font-size:12px;color:rgba(255,255,255,.58);margin-bottom:4px"><strong style="color:rgba(255,255,255,.78)">Type:</strong> ${ctx.type}</div><div style="font-size:12px;color:rgba(255,255,255,.58)"><strong style="color:rgba(255,255,255,.78)">Range:</strong> ${ctx.range}</div></div><div class="rw-msg" style="margin-bottom:12px">${ctx.desc}</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="switchDemo('deal',document.querySelectorAll('.df-ntab')[0])">Add to my deal stack →</button><button class="rw-qbtn" onclick="openRW('brief','See today\\'s action plan',{t:'brief'})">Back to action plan →</button></div>`};
+  return{t:'Real Wisdom',b:`<div class="rw-msg">I'm analyzing this for your deal.</div><div class="rw-qbtns"><button class="rw-qbtn" onclick="openRW('brief','See today\\'s action plan',{t:'brief'})">See today's action plan →</button><button class="rw-qbtn" onclick="openRW('gap','Close the $1,200 gap',{t:'gap'})">Close the $1,200 gap →</button></div>`};
+}
+function openRW(id,title,ctx){
+  const c=getRW(ctx&&ctx.t?ctx.t:id,ctx||{});
+  document.getElementById('rw-title').textContent=c.t||title;
+  document.getElementById('rw-body').innerHTML=c.b;
+  document.getElementById('rw-panel').classList.add('on');
+  document.getElementById('rtabs-wrap').style.display='none';
+}
+function closeRW(){
+  document.getElementById('rw-panel').classList.remove('on');
+  document.getElementById('rtabs-wrap').style.display='flex';
+}
+function sendRW(){
+  const v=document.getElementById('rw-input').value.trim();
+  if(!v)return;
+  document.getElementById('rw-input').value='';
+  openRW('brief','Real Wisdom response',{t:'brief'});
+}
+var advReplies={
+  'What document does Bridgeview need?':'Bridgeview needs an updated personal financial statement for each principal with >20% ownership. Your current one on file is 8 months old — they require one within 90 days of close. Submit today with this cover note:\n\n"Hi Bridgeview team, attaching an updated personal financial statement for all principals per your requirements. Please let us know if there\'s anything else needed to finalize the commitment. We\'re targeting April 20 for construction close."',
+  'Draft the Apex email for the additional $400K':'Here\'s your email — ready to send:\n\nSubject: Southside Commons — loan increase request\n\n"Dear Apex team, Following up on our Impact Fund loan for Southside Commons. We\'d like to formally request the additional $400,000 of available capacity, bringing our total to $2.5M and closing the remaining stack gap. We\'re targeting April 20 for construction closing. Please let us know what documentation you need."',
+  'What are my options if Greenway NMTC falls through?':'If Greenway ($1.7M) falls through, three backup paths:\n\n1. Illinois Housing Authority gap financing — 91% match, $4M max, your deal qualifies today. Start this week as a parallel track regardless of Greenway.\n\n2. Urban Impact Ventures equity co-investment — $800K, moves fast on Chicago deals, strong mission alignment.\n\n3. Great Lakes CDFI Alliance — $1.5M, 78% match, 4 active Chicago members.\n\nIHA + Urban Impact covers the full amount. I recommend starting IHA this week no matter what Greenway says.',
+  'Close the $1,200 gap — all 3 options':'Three options, ranked by speed:\n\nOption 1 (Today): Round up developer equity from $220K to $221,200. This $1,200 is almost certainly a preincurred cost — document it. No external approval. Fastest.\n\nOption 2 (3 days): Request $1,200 increase from Cornerstone CF Note. One email, existing relationship, very likely approval.\n\nOption 3: Ask Meridian Build Co. if any material allowance can be trimmed by $1,200 on the uses side.\n\nDo Option 1 today.'
+};
+function addMsg(text,fromInput){
+  if(!text||!text.trim())return;
+  const msgs=document.getElementById('adv-msgs');
+  const u=document.createElement('div');
+  u.style.cssText='align-self:flex-end;max-width:78%';
+  u.innerHTML=`<div class="mu"><div class="b">${text}</div></div>`;
+  msgs.appendChild(u);
+  if(fromInput)document.getElementById('adv-input').value='';
+  const reply=advReplies[text]||'Let me look into that for Southside Commons. The most important thing right now is the Bridgeview document — that\'s blocking your close in 3 days. Once that\'s resolved I can focus on everything else you need.';
+  setTimeout(()=>{
+    const r=document.createElement('div');
+    r.style.cssText='align-self:flex-start;max-width:88%';
+    r.innerHTML=`<div style="font-size:10px;color:rgba(255,255,255,.22);margin-bottom:4px">Real Wisdom</div><div class="mr"><div class="b">${reply.replace(/\n/g,'<br>')}</div></div>`;
+    msgs.appendChild(r);
+    msgs.scrollTop=msgs.scrollHeight;
+  },700);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+</script>
+</body>
+</html>
