@@ -4,6 +4,7 @@ import Link from 'next/link';
 import UserMenu from '@/components/UserMenu';
 import RISRing from '@/components/impact-score/RISRing';
 import DimensionBars from '@/components/impact-score/DimensionBars';
+import { calculateRIS, type RISDimensions } from '@/lib/ris/calculate';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,77 +30,115 @@ export default async function ImpactScorePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  // Fetch user's deals + their belief capital moments
-  const [{ data: deals }, { data: moments }] = await Promise.all([
-    supabase.from('deals').select('id, name, real_impact_score, total_cost, unit_count, ami_targeting'),
+  // Fetch ALL deal data so we can compute live RIS per-deal and aggregate
+  const [
+    { data: deals },
+    { data: capitalSources },
+    { data: checklist },
+    { data: milestones },
+    { data: stakeholders },
+    { data: moments },
+  ] = await Promise.all([
+    supabase.from('deals').select('*'),
+    supabase.from('capital_sources').select('*'),
+    supabase.from('checklist_items').select('*'),
+    supabase.from('milestones').select('*'),
+    supabase.from('deal_stakeholders').select('*'),
     supabase.from('belief_capital_moments').select('*').order('occurred_at', { ascending: false }),
   ]);
 
   const dealList = deals ?? [];
-  const momentList = moments ?? [];
+  const allCapital = capitalSources ?? [];
+  const allChecklist = checklist ?? [];
+  const allMilestones = milestones ?? [];
+  const allStakeholders = stakeholders ?? [];
+  const allMoments = moments ?? [];
 
-  // Compute composite RIS as average of deal RIS scores
+  // Compute RIS per deal, then aggregate
+  const perDealRIS = dealList.map((d) =>
+    calculateRIS({
+      deal: d,
+      capitalSources: allCapital.filter((s) => s.deal_id === d.id),
+      checklist: allChecklist.filter((c) => c.deal_id === d.id),
+      milestones: allMilestones.filter((m) => m.deal_id === d.id),
+      stakeholders: allStakeholders.filter((s) => s.deal_id === d.id),
+      beliefMoments: allMoments.filter((m) => m.deal_id === d.id),
+    })
+  );
+
   const compositeScore =
-    dealList.length > 0
-      ? Math.round(
-          dealList.reduce((sum, d) => sum + (d.real_impact_score ?? 0), 0) / dealList.length
-        )
+    perDealRIS.length > 0
+      ? Math.round(perDealRIS.reduce((sum, r) => sum + r.composite, 0) / perDealRIS.length)
       : 0;
 
-  // Compute totals
+  // Aggregate dimensions across deals (average each)
+  const dimensionKeys: (keyof RISDimensions)[] = [
+    'community_outcomes',
+    'financial_performance',
+    'growth_trajectory',
+    'network_depth',
+    'belief_capital',
+    'survival_interventions',
+    'network_activations',
+  ];
+  const aggregatedDimensions: RISDimensions = {} as RISDimensions;
+  for (const k of dimensionKeys) {
+    aggregatedDimensions[k] =
+      perDealRIS.length > 0
+        ? Math.round(perDealRIS.reduce((sum, r) => sum + r.dimensions[k], 0) / perDealRIS.length)
+        : 0;
+  }
+
+  // Headline counts
   const totalUnits = dealList.reduce((sum, d) => sum + (d.unit_count ?? 0), 0);
   const totalCapitalDeployed = dealList.reduce((sum, d) => sum + (d.total_cost ?? 0), 0);
-  const totalDownstreamValue = momentList.reduce(
+  const totalDownstreamValue = allMoments.reduce(
     (sum, m) => sum + Number(m.downstream_value ?? 0),
     0
   );
-  const survivalInterventions = momentList.filter((m) => m.moment_type === 'survival_intervention').length;
-  const networkActivations = momentList.filter((m) => m.moment_type === 'network_activation').length;
 
-  // Synthesize dimension scores. Real RIS would compute from underlying signals;
-  // here we derive plausible values from what's in the database.
   const dimensions = [
     {
       key: 'community_outcomes',
       label: 'Community outcomes',
-      value: Math.min(100, totalUnits * 1.5 + 30),
-      description: `${totalUnits} units · ${dealList.filter((d) => d.ami_targeting).length} AMI-targeted deals`,
+      value: aggregatedDimensions.community_outcomes,
+      description: `${totalUnits} units · ${dealList.filter((d) => d.ami_targeting).length} AMI-targeted`,
     },
     {
       key: 'financial_performance',
       label: 'Financial performance',
-      value: 72,
-      description: 'Stack completion, draw discipline, IRR projections',
+      value: aggregatedDimensions.financial_performance,
+      description: 'Stack completion, source diversification',
     },
     {
       key: 'growth_trajectory',
       label: 'Growth trajectory',
-      value: 65,
-      description: `${dealList.length} active deal${dealList.length === 1 ? '' : 's'} · pipeline velocity`,
+      value: aggregatedDimensions.growth_trajectory,
+      description: `Milestone progress across ${dealList.length} deal${dealList.length === 1 ? '' : 's'}`,
     },
     {
       key: 'network_depth',
       label: 'Network depth',
-      value: 78,
-      description: 'Stakeholder relationships, repeat capital partners',
+      value: aggregatedDimensions.network_depth,
+      description: 'Active stakeholders + approved capital partners',
     },
     {
       key: 'belief_capital',
       label: 'Belief capital received',
-      value: Math.min(100, momentList.length * 20 + 40),
-      description: `${momentList.length} moment${momentList.length === 1 ? '' : 's'} logged`,
+      value: aggregatedDimensions.belief_capital,
+      description: `${allMoments.length} moment${allMoments.length === 1 ? '' : 's'} logged`,
     },
     {
       key: 'survival_interventions',
       label: 'Survival interventions',
-      value: Math.min(100, survivalInterventions * 30 + 50),
-      description: `${survivalInterventions} interventions tracked`,
+      value: aggregatedDimensions.survival_interventions,
+      description: `${allMoments.filter((m) => m.moment_type === 'survival_intervention').length} interventions tracked`,
     },
     {
       key: 'network_activations',
       label: 'Network activations',
-      value: Math.min(100, networkActivations * 25 + 45),
-      description: `${networkActivations} activations · introductions made`,
+      value: aggregatedDimensions.network_activations,
+      description: `${allMoments.filter((m) => m.moment_type === 'network_activation' || m.moment_type === 'connection').length} activations`,
     },
   ];
 
@@ -123,7 +162,7 @@ export default async function ImpactScorePage() {
       </header>
 
       <div className="max-w-6xl mx-auto px-8 py-10 space-y-8">
-        {/* Hero — Score + headline metrics */}
+        {/* Hero */}
         <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl p-8">
           <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-8 items-center">
             <RISRing score={compositeScore} />
@@ -133,8 +172,9 @@ export default async function ImpactScorePage() {
               </h2>
               <p className="text-midgray text-sm mb-6 max-w-2xl">
                 The Real Impact Score™ tracks the full causal chain from belief capital moment to
-                community outcome. Not just dollars and units — the introductions, interventions,
-                and network activations that compound over time.
+                community outcome. Recalculated from your actual data — every checklist item you
+                close, every capital source you secure, every belief capital moment you log shifts
+                this score in real time.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
                 <Stat label="Active deals" value={String(dealList.length)} />
@@ -150,28 +190,66 @@ export default async function ImpactScorePage() {
         <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl p-6">
           <h3 className="font-serif text-2xl mb-1">Score dimensions</h3>
           <p className="text-midgray text-sm mb-6">
-            Seven signals that compound into your composite score. Belief-capital dimensions are
-            unique to Realtor Wisdom — measuring what most platforms ignore.
+            Each is computed from real signals on your deals. Move a milestone to done, mark a
+            checklist item complete, log a moment — watch these shift.
           </p>
           <DimensionBars dimensions={dimensions} />
         </section>
+
+        {/* Per-deal breakdown */}
+        {dealList.length > 0 && (
+          <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-teal-mid/20">
+              <h3 className="font-serif text-2xl">Per-deal scores</h3>
+              <p className="text-midgray text-sm">Live computed — click a deal to see what&apos;s driving the number.</p>
+            </div>
+            <ul className="divide-y divide-teal-mid/15">
+              {dealList.map((d, i) => {
+                const ris = perDealRIS[i];
+                return (
+                  <li key={d.id} className="px-6 py-3 hover:bg-charcoal/40 transition">
+                    <Link href={`/deals/${d.id}`} className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="font-medium">{d.name}</div>
+                        <div className="text-xs text-midgray">
+                          {ris.signals.completion}% stack · {ris.signals.milestonesDone}/
+                          {ris.signals.milestonesTotal} milestones · {ris.signals.moments} moments
+                          {ris.signals.blockingClose > 0 && (
+                            <span className="text-red"> · {ris.signals.blockingClose} blocking</span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`font-serif text-2xl ${
+                          ris.composite >= 80 ? 'text-teal' : ris.composite >= 60 ? 'text-amber' : 'text-red'
+                        }`}
+                      >
+                        {ris.composite}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         {/* Belief capital moments */}
         <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-teal-mid/20">
             <h3 className="font-serif text-2xl">Belief capital moments</h3>
             <p className="text-midgray text-sm">
-              Every interaction that creates downstream value, logged. Most platforms can't see
+              Every interaction that creates downstream value, logged. Most platforms can&apos;t see
               these. Yours does.
             </p>
           </div>
-          {momentList.length === 0 ? (
+          {allMoments.length === 0 ? (
             <div className="p-12 text-center text-midgray text-sm">
-              No moments logged yet. Real Wisdom will surface these as your deals progress.
+              No moments logged yet. Click ✨ in any Real Wisdom conversation to capture one.
             </div>
           ) : (
             <ul className="divide-y divide-teal-mid/15">
-              {momentList.map((m) => {
+              {allMoments.map((m) => {
                 const style = m.moment_type
                   ? MOMENT_TYPE_STYLES[m.moment_type] ?? MOMENT_TYPE_STYLES.belief_support
                   : MOMENT_TYPE_STYLES.belief_support;

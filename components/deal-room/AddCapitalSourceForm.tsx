@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { CapitalSource } from '@/lib/types';
 
 const SOURCE_TYPES = [
@@ -102,6 +103,7 @@ export default function AddCapitalSourceForm({
         ? `Updated ${name} (${sourceType}, ${status}, ${dollars})`
         : `Added ${name} ${dollars} (${sourceType}, ${status}) to capital stack`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setLoading(false);
     onClose();
     router.refresh();

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import UserMenu from '@/components/UserMenu';
 import RISRing from '@/components/impact-score/RISRing';
+import { calculateRIS } from '@/lib/ris/calculate';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,16 +21,44 @@ export default async function PortfolioPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  // Fetch deals + capital sources + belief moments — view as if user were a fund
-  const [{ data: deals }, { data: sources }, { data: moments }] = await Promise.all([
+  // Fetch all deal-related data so we can compute live RIS per deal
+  const [
+    { data: deals },
+    { data: sources },
+    { data: checklist },
+    { data: milestones },
+    { data: stakeholders },
+    { data: moments },
+  ] = await Promise.all([
     supabase.from('deals').select('*').order('updated_at', { ascending: false }),
     supabase.from('capital_sources').select('*'),
+    supabase.from('checklist_items').select('*'),
+    supabase.from('milestones').select('*'),
+    supabase.from('deal_stakeholders').select('*'),
     supabase.from('belief_capital_moments').select('*'),
   ]);
 
   const dealList = deals ?? [];
   const sourceList = sources ?? [];
+  const checklistList = checklist ?? [];
+  const milestoneList = milestones ?? [];
+  const stakeholderList = stakeholders ?? [];
   const momentList = moments ?? [];
+
+  // Compute live RIS per deal using the calculator
+  const perDealRIS = dealList.map((d) =>
+    calculateRIS(
+      {
+        deal: d,
+        capitalSources: sourceList.filter((s) => s.deal_id === d.id),
+        checklist: checklistList.filter((c) => c.deal_id === d.id),
+        milestones: milestoneList.filter((m) => m.deal_id === d.id),
+        stakeholders: stakeholderList.filter((s) => s.deal_id === d.id),
+        beliefMoments: momentList.filter((m) => m.deal_id === d.id),
+      },
+      'fund'
+    )
+  );
 
   // Aggregate fund-level metrics
   const totalCommitted = dealList.reduce((sum, d) => sum + (d.total_cost ?? 0), 0);
@@ -38,29 +67,30 @@ export default async function PortfolioPage() {
     .reduce((sum, s) => sum + (s.committed_amount ?? 0), 0);
   const totalUnits = dealList.reduce((sum, d) => sum + (d.unit_count ?? 0), 0);
   const fundRIS =
-    dealList.length > 0
-      ? Math.round(
-          dealList.reduce((sum, d) => sum + (d.real_impact_score ?? 0), 0) / dealList.length
-        )
+    perDealRIS.length > 0
+      ? Math.round(perDealRIS.reduce((sum, r) => sum + r.composite, 0) / perDealRIS.length)
       : 0;
   const survivalInterventions = momentList.filter(
     (m) => m.moment_type === 'survival_intervention'
   ).length;
 
-  // Per-deal: capital secured & gap status
-  const dealMetrics = dealList.map((deal) => {
+  // Per-deal: capital secured, completion, blocking items, and live RIS
+  const dealMetrics = dealList.map((deal, idx) => {
     const dealSources = sourceList.filter((s) => s.deal_id === deal.id);
     const secured = dealSources
       .filter((s) => s.status !== 'gap')
       .reduce((sum, s) => sum + (s.committed_amount ?? 0), 0);
     const total = deal.total_cost ?? 0;
     const completion = total > 0 ? Math.round((secured / total) * 100) : 0;
-    const blockingItems = 0; // placeholder — would query checklist_items where blocking_close = true
+    const blockingItems = checklistList.filter(
+      (c) => c.deal_id === deal.id && c.blocking_close && c.status !== 'done'
+    ).length;
     return {
       ...deal,
       secured,
       completion,
       blockingItems,
+      liveRIS: perDealRIS[idx].composite,
     };
   });
 
@@ -207,14 +237,14 @@ export default async function PortfolioPage() {
                     <td className="px-6 py-4 text-right">
                       <span
                         className={`font-serif text-base ${
-                          (d.real_impact_score ?? 0) >= 80
+                          d.liveRIS >= 80
                             ? 'text-teal'
-                            : (d.real_impact_score ?? 0) >= 60
+                            : d.liveRIS >= 60
                               ? 'text-amber'
                               : 'text-red'
                         }`}
                       >
-                        {d.real_impact_score ?? 0}
+                        {d.liveRIS}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right text-xs capitalize text-midgray">

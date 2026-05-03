@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { CapitalSource } from '@/lib/types';
 import AddCapitalSourceForm from './AddCapitalSourceForm';
 
@@ -66,6 +67,7 @@ export default function CapitalStackTable({
       dealId,
       action: `Updated ${s.name} status: ${s.status} → ${next}`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }
@@ -79,6 +81,7 @@ export default function CapitalStackTable({
       dealId,
       action: `Removed ${s.name} from capital stack`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }

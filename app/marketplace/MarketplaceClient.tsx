@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { MarketplaceSource, ScoringDeal } from '@/lib/marketplace/scoring';
 import { scoreSourcesForDeal } from '@/lib/marketplace/scoring';
 
@@ -88,6 +89,7 @@ export default function MarketplaceClient({
       type: 'system',
     });
 
+    await recalculateAndPersistRIS(supabase, selectedDealId);
     setAdded((prev) => new Set(prev).add(source.id));
     setAdding(null);
     router.refresh();

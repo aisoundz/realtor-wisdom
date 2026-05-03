@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { ChecklistItem } from '@/lib/types';
 import AddChecklistItemForm from './AddChecklistItemForm';
 
@@ -48,6 +49,7 @@ export default function ComplianceChecklist({
       dealId,
       action: next === 'done' ? `Completed: "${item.name}"` : `Reopened: "${item.name}"`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }
@@ -61,6 +63,7 @@ export default function ComplianceChecklist({
       dealId,
       action: `Removed compliance item: "${item.name}"`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }

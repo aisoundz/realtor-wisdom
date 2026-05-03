@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { Milestone } from '@/lib/types';
 import AddMilestoneForm from './AddMilestoneForm';
 
@@ -50,6 +51,7 @@ export default function MilestoneTimeline({
       dealId,
       action: `Updated milestone "${m.name}": ${m.status} → ${next}`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }
@@ -63,6 +65,7 @@ export default function MilestoneTimeline({
       dealId,
       action: `Removed milestone: "${m.name}"`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }

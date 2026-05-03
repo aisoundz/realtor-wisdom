@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { Stakeholder } from '@/lib/types';
 import AddStakeholderForm from './AddStakeholderForm';
 
@@ -35,6 +36,7 @@ export default function StakeholderPanel({
       action: `Removed stakeholder: ${s.name}`,
       type: 'stakeholder',
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setBusyId(null);
     router.refresh();
   }

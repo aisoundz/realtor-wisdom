@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { DealContext, WisdomTrigger } from '@/lib/types';
 
 // Web Speech API types (not in default TS libs)
@@ -168,6 +169,7 @@ export default function RealWisdomPanel({
           : 'Logged a belief capital moment from Real Wisdom conversation',
         type: 'belief_capital',
       });
+      await recalculateAndPersistRIS(supabase, dealContext.deal.id);
       setLoggedAt(Date.now());
       setShowLogForm(false);
       setLogValue('');

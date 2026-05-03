@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { Stakeholder } from '@/lib/types';
 
 export default function AddStakeholderForm({
@@ -65,6 +66,7 @@ export default function AddStakeholderForm({
         : `Added stakeholder ${name}${role ? ` — ${role}` : ''}`,
       type: 'stakeholder',
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setLoading(false);
     onClose();
     router.refresh();

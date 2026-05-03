@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { ChecklistItem } from '@/lib/types';
 
 const PHASES = [
@@ -86,6 +87,7 @@ export default function AddChecklistItemForm({
         ? `Updated compliance item "${name}" (${phase.replace('_', ' ')}, ${status})`
         : `Added compliance item "${name}" (${phase.replace('_', ' ')}, ${status})${blockingClose ? ' — flagged as blocking construction close' : ''}`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setLoading(false);
     onClose();
     router.refresh();

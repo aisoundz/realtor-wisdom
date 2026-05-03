@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 import type { Milestone } from '@/lib/types';
 
 const STATUSES = [
@@ -73,6 +74,7 @@ export default function AddMilestoneForm({
         ? `Updated milestone "${name}"${targetDate ? ` — target ${targetDate}` : ''} (${status})`
         : `Added milestone "${name}"${targetDate ? ` — target ${targetDate}` : ''}`,
     });
+    await recalculateAndPersistRIS(supabase, dealId);
     setLoading(false);
     onClose();
     router.refresh();
