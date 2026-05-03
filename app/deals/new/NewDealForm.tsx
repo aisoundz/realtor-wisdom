@@ -107,6 +107,15 @@ export default function NewDealForm() {
       return;
     }
 
+    // Seed the activity feed with the creation event so the deal room isn't empty
+    await supabase.from('activity_log').insert({
+      deal_id: deal.id,
+      org_id: orgId,
+      actor: 'You',
+      action: `Deal created — ${name}${city || state ? `, ${[city, state].filter(Boolean).join(', ')}` : ''}${totalCostNum ? ` ($${(totalCostNum / 1_000_000).toFixed(1)}M)` : ''}`,
+      type: 'system',
+    });
+
     router.push(`/deals/${deal.id}`);
     router.refresh();
   }

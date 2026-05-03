@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 
 const STATUSES = [
   { value: 'todo', label: 'To do' },
@@ -39,11 +40,16 @@ export default function AddMilestoneForm({
       target_date: targetDate || null,
       sort_order: nextSortOrder,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+    await logActivity(supabase, {
+      dealId,
+      action: `Added milestone "${name}"${targetDate ? ` — target ${targetDate}` : ''}`,
+    });
+    setLoading(false);
     onClose();
     router.refresh();
   }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 
 const SOURCE_TYPES = [
   { value: 'impact_loan', label: 'Impact loan' },
@@ -60,11 +61,21 @@ export default function AddCapitalSourceForm({
       notes: notes || null,
       sort_order: nextSortOrder,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+    const dollars = amountNum >= 1_000_000
+      ? `$${(amountNum / 1_000_000).toFixed(2)}M`
+      : amountNum >= 1_000
+        ? `$${(amountNum / 1_000).toFixed(0)}K`
+        : `$${amountNum}`;
+    await logActivity(supabase, {
+      dealId,
+      action: `Added ${name} ${dollars} (${sourceType}, ${status}) to capital stack`,
+    });
+    setLoading(false);
     onClose();
     router.refresh();
   }

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import type { MarketplaceSource, ScoringDeal } from '@/lib/marketplace/scoring';
 import { scoreSourcesForDeal } from '@/lib/marketplace/scoring';
 
@@ -31,8 +33,65 @@ export default function MarketplaceClient({
   sources: MarketplaceSource[];
   deals: ScoringDeal[];
 }) {
+  const router = useRouter();
+  const supabase = createClient();
   const [selectedDealId, setSelectedDealId] = useState<string>(deals[0]?.id ?? '');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [adding, setAdding] = useState<string | null>(null);
+  const [added, setAdded] = useState<Set<string>>(new Set());
+  const [addError, setAddError] = useState<string | null>(null);
+
+  async function addToStack(source: MarketplaceSource) {
+    if (!selectedDealId) return;
+    setAdding(source.id);
+    setAddError(null);
+
+    // Determine the next sort_order for the deal's capital stack
+    const { data: existing } = await supabase
+      .from('capital_sources')
+      .select('sort_order')
+      .eq('deal_id', selectedDealId)
+      .order('sort_order', { ascending: false })
+      .limit(1);
+    const nextSortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
+
+    const initialAmount = source.min_amount ?? 0;
+    const { error } = await supabase.from('capital_sources').insert({
+      deal_id: selectedDealId,
+      name: source.name,
+      source_type: source.source_type,
+      committed_amount: initialAmount,
+      status: 'requested',
+      notes: source.description ?? null,
+      sort_order: nextSortOrder,
+    });
+
+    if (error) {
+      setAddError(`Could not add ${source.name}: ${error.message}`);
+      setAdding(null);
+      return;
+    }
+
+    // Log activity
+    const dealOrgId = await supabase
+      .from('deals')
+      .select('org_id')
+      .eq('id', selectedDealId)
+      .single()
+      .then((r) => r.data?.org_id ?? null);
+
+    await supabase.from('activity_log').insert({
+      deal_id: selectedDealId,
+      org_id: dealOrgId,
+      actor: 'You',
+      action: `Added ${source.name} (${source.source_type ?? 'source'}) to capital stack from marketplace`,
+      type: 'system',
+    });
+
+    setAdded((prev) => new Set(prev).add(source.id));
+    setAdding(null);
+    router.refresh();
+  }
 
   const selectedDeal = deals.find((d) => d.id === selectedDealId);
 
@@ -145,13 +204,31 @@ export default function MarketplaceClient({
                   <span>
                     {formatMoney(source.min_amount)} – {formatMoney(source.max_amount)}
                   </span>
-                  <button className="text-teal hover:text-teal-light font-medium">
-                    Add to stack →
-                  </button>
+                  {added.has(source.id) ? (
+                    <a
+                      href={`/deals/${selectedDealId}`}
+                      className="text-teal-light font-medium"
+                    >
+                      ✓ Added — view in deal →
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => addToStack(source)}
+                      disabled={adding === source.id || !selectedDealId}
+                      className="text-teal hover:text-teal-light font-medium disabled:opacity-50"
+                    >
+                      {adding === source.id ? 'Adding…' : 'Add to stack →'}
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+      {addError && (
+        <div className="bg-red/10 border border-red/30 text-red px-4 py-3 rounded-lg text-sm">
+          {addError}
         </div>
       )}
     </div>

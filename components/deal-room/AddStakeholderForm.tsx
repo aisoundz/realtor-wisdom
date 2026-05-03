@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 
 export default function AddStakeholderForm({
   dealId,
@@ -31,11 +32,17 @@ export default function AddStakeholderForm({
       status,
       action_items: 0,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+    await logActivity(supabase, {
+      dealId,
+      action: `Added stakeholder ${name}${role ? ` — ${role}` : ''}`,
+      type: 'stakeholder',
+    });
+    setLoading(false);
     onClose();
     router.refresh();
   }

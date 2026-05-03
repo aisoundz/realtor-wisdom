@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 
 const PHASES = [
   { value: 'pre_development', label: 'Pre-development' },
@@ -51,11 +52,16 @@ export default function AddChecklistItemForm({
       notes: notes || null,
       sort_order: 999,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+    await logActivity(supabase, {
+      dealId,
+      action: `Added compliance item "${name}" (${phase.replace('_', ' ')}, ${status})${blockingClose ? ' — flagged as blocking construction close' : ''}`,
+    });
+    setLoading(false);
     onClose();
     router.refresh();
   }
