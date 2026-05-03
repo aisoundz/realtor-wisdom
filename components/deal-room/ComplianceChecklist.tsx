@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
 import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
+import { useCollapse } from '@/lib/hooks/useCollapse';
 import type { ChecklistItem } from '@/lib/types';
 import AddChecklistItemForm from './AddChecklistItemForm';
+import SectionToggle from './SectionToggle';
 
 const PHASE_LABELS: Record<string, string> = {
   pre_development: 'Pre-development',
@@ -36,6 +38,8 @@ export default function ComplianceChecklist({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [collapsed, toggleCollapse] = useCollapse(`compliance-${dealId}`, false);
+  const doneCount = items.filter((i) => i.status === 'done').length;
 
   async function toggleDone(item: ChecklistItem, e: React.MouseEvent) {
     e.stopPropagation();
@@ -81,19 +85,37 @@ export default function ComplianceChecklist({
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-xl">Compliance checklist</h2>
-          <p className="text-midgray text-xs">Click an item to ask Real Wisdom</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {blockingCount > 0 && (
+      <div className={`px-6 py-4 flex items-center justify-between gap-3 ${collapsed ? '' : 'border-b border-teal-mid/20'}`}>
+        <button
+          onClick={toggleCollapse}
+          className="flex items-center gap-3 text-left flex-1 min-w-0 hover:text-teal-light transition"
+        >
+          <SectionToggle collapsed={collapsed} />
+          <div className="min-w-0">
+            <h2 className="font-serif text-xl">Compliance checklist</h2>
+            <p className="text-midgray text-xs">
+              {collapsed
+                ? `${doneCount}/${items.length} done${blockingCount > 0 ? ` · ${blockingCount} blocking` : ''}`
+                : 'Click an item to ask Real Wisdom'}
+            </p>
+          </div>
+        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {!collapsed && blockingCount > 0 && (
             <span className="text-xs px-2.5 py-1 rounded-full bg-red/15 text-red border border-red/30">
               {blockingCount} blocking close
             </span>
           )}
+          {collapsed && blockingCount > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red/15 text-red border border-red/30">
+              {blockingCount} ⚠
+            </span>
+          )}
           <button
-            onClick={() => setAdding(!adding)}
+            onClick={() => {
+              if (collapsed) toggleCollapse();
+              setAdding(!adding);
+            }}
             className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
           >
             {adding ? 'Close' : '+ Add item'}
@@ -106,6 +128,7 @@ export default function ComplianceChecklist({
           onClose={() => setAdding(false)}
         />
       )}
+      {!collapsed && (
       <div className="divide-y divide-teal-mid/15">
         {phaseOrder
           .filter((p) => byPhase[p]?.length)
@@ -199,6 +222,7 @@ export default function ComplianceChecklist({
             );
           })}
       </div>
+      )}
     </section>
   );
 }

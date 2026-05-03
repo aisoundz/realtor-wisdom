@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import SeedButton from './SeedButton';
 import UserMenu from '@/components/UserMenu';
+import DealCardMenu from '@/components/DealCardMenu';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
 
   const { data: deals } = await supabase
     .from('deals')
-    .select('id, name, address, city, state, total_cost, status, health_score, real_impact_score')
+    .select('id, name, address, city, state, total_cost, status, health_score, real_impact_score, is_public')
     .order('updated_at', { ascending: false })
     .limit(10);
 
@@ -73,30 +74,42 @@ export default async function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {deals.map((deal) => (
-              <Link
+              <div
                 key={deal.id}
-                href={`/deals/${deal.id}`}
-                className="block bg-charcoal/40 hover:bg-charcoal/60 border border-teal-mid/30 rounded-xl p-5 transition"
+                className="relative bg-charcoal/40 hover:bg-charcoal/60 border border-teal-mid/30 rounded-xl transition group"
               >
-                <h3 className="font-serif text-xl mb-1">{deal.name}</h3>
-                <p className="text-midgray text-sm mb-4">
-                  {[deal.address, deal.city, deal.state].filter(Boolean).join(', ')}
-                </p>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <div className="text-midgray">RIS</div>
-                    <div className="text-teal font-medium text-base">{deal.real_impact_score ?? 0}</div>
+                <Link
+                  href={`/deals/${deal.id}`}
+                  className="block p-5 pr-14"
+                >
+                  <h3 className="font-serif text-xl mb-1">{deal.name}</h3>
+                  <p className="text-midgray text-sm mb-4">
+                    {[deal.address, deal.city, deal.state].filter(Boolean).join(', ')}
+                    {deal.is_public && (
+                      <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber/15 text-amber border border-amber/30">
+                        public
+                      </span>
+                    )}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <div className="text-midgray">RIS</div>
+                      <div className="text-teal font-medium text-base">{deal.real_impact_score ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-midgray">Health</div>
+                      <div className="text-amber font-medium text-base">{deal.health_score ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-midgray">Status</div>
+                      <div className="font-medium text-base capitalize">{deal.status}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-midgray">Health</div>
-                    <div className="text-amber font-medium text-base">{deal.health_score ?? 0}</div>
-                  </div>
-                  <div>
-                    <div className="text-midgray">Status</div>
-                    <div className="font-medium text-base capitalize">{deal.status}</div>
-                  </div>
+                </Link>
+                <div className="absolute top-3 right-3">
+                  <DealCardMenu dealId={deal.id} dealName={deal.name} isPublic={deal.is_public} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

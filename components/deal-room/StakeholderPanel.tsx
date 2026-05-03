@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
 import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
+import { useCollapse } from '@/lib/hooks/useCollapse';
 import type { Stakeholder } from '@/lib/types';
 import AddStakeholderForm from './AddStakeholderForm';
+import SectionToggle from './SectionToggle';
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-teal/15 text-teal border-teal/30',
@@ -26,6 +28,8 @@ export default function StakeholderPanel({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [collapsed, toggleCollapse] = useCollapse(`stakeholders-${dealId}`, false);
+  const totalActions = stakeholders.reduce((sum, s) => sum + (s.action_items ?? 0), 0);
 
   async function deleteStakeholder(s: Stakeholder) {
     if (!confirm(`Remove ${s.name} from this deal?`)) return;
@@ -43,14 +47,25 @@ export default function StakeholderPanel({
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-xl">Stakeholders</h2>
-          <p className="text-midgray text-xs">{stakeholders.length} active in this deal</p>
-        </div>
+      <div className={`px-6 py-4 flex items-center justify-between gap-3 ${collapsed ? '' : 'border-b border-teal-mid/20'}`}>
         <button
-          onClick={() => setAdding(!adding)}
-          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+          onClick={toggleCollapse}
+          className="flex items-center gap-3 text-left flex-1 min-w-0 hover:text-teal-light transition"
+        >
+          <SectionToggle collapsed={collapsed} />
+          <div className="min-w-0">
+            <h2 className="font-serif text-xl">Stakeholders</h2>
+            <p className="text-midgray text-xs">
+              {stakeholders.length} active{totalActions > 0 ? ` · ${totalActions} action item${totalActions === 1 ? '' : 's'}` : ''}
+            </p>
+          </div>
+        </button>
+        <button
+          onClick={() => {
+            if (collapsed) toggleCollapse();
+            setAdding(!adding);
+          }}
+          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium shrink-0"
         >
           {adding ? 'Close' : '+ Add stakeholder'}
         </button>
@@ -61,6 +76,7 @@ export default function StakeholderPanel({
           onClose={() => setAdding(false)}
         />
       )}
+      {!collapsed && (
       <ul className="divide-y divide-teal-mid/15">
         {stakeholders.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.active;
@@ -115,6 +131,7 @@ export default function StakeholderPanel({
           );
         })}
       </ul>
+      )}
     </section>
   );
 }

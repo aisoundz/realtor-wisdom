@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
 import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
+import { useCollapse } from '@/lib/hooks/useCollapse';
 import type { CapitalSource } from '@/lib/types';
 import AddCapitalSourceForm from './AddCapitalSourceForm';
+import SectionToggle from './SectionToggle';
 
 const STATUS_CYCLE = ['pending', 'in_loi', 'approved', 'confirmed', 'requested', 'gap'];
 
@@ -55,7 +57,17 @@ export default function CapitalStackTable({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [collapsed, toggleCollapse] = useCollapse(`capital-stack-${dealId}`, false);
   const nextSortOrder = sources.length > 0 ? Math.max(...sources.map((s) => s.sort_order)) + 1 : 0;
+  const securedTotal = sources
+    .filter((s) => s.status !== 'gap')
+    .reduce((sum, s) => sum + (s.committed_amount ?? 0), 0);
+  const securedLabel =
+    securedTotal >= 1_000_000
+      ? `$${(securedTotal / 1_000_000).toFixed(1)}M secured`
+      : securedTotal >= 1_000
+        ? `$${(securedTotal / 1_000).toFixed(0)}K secured`
+        : '';
 
   async function cycleStatus(s: CapitalSource, e: React.MouseEvent) {
     e.stopPropagation();
@@ -88,15 +100,28 @@ export default function CapitalStackTable({
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-xl">Capital stack</h2>
-          <p className="text-midgray text-xs">Click any row to ask Real Wisdom about it</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-midgray">{sources.length} sources</span>
+      <div className={`px-6 py-4 flex items-center justify-between gap-3 ${collapsed ? '' : 'border-b border-teal-mid/20'}`}>
+        <button
+          onClick={toggleCollapse}
+          className="flex items-center gap-3 text-left flex-1 min-w-0 hover:text-teal-light transition"
+        >
+          <SectionToggle collapsed={collapsed} />
+          <div className="min-w-0">
+            <h2 className="font-serif text-xl">Capital stack</h2>
+            <p className="text-midgray text-xs">
+              {collapsed
+                ? `${sources.length} source${sources.length === 1 ? '' : 's'}${securedLabel ? ` · ${securedLabel}` : ''}`
+                : 'Click any row to ask Real Wisdom about it'}
+            </p>
+          </div>
+        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {!collapsed && <span className="text-xs text-midgray">{sources.length} sources</span>}
           <button
-            onClick={() => setAdding(!adding)}
+            onClick={() => {
+              if (collapsed) toggleCollapse();
+              setAdding(!adding);
+            }}
             className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
           >
             {adding ? 'Close' : '+ Add source'}
@@ -110,6 +135,7 @@ export default function CapitalStackTable({
           onClose={() => setAdding(false)}
         />
       )}
+      {!collapsed && (
       <ul>
         {sources.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.pending;
@@ -182,6 +208,7 @@ export default function CapitalStackTable({
           );
         })}
       </ul>
+      )}
     </section>
   );
 }

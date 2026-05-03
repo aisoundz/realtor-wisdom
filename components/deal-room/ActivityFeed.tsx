@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useCollapse } from '@/lib/hooks/useCollapse';
 import type { ActivityEntry } from '@/lib/types';
+import SectionToggle from './SectionToggle';
 
 const TYPE_STYLES: Record<string, { color: string; label: string }> = {
   real_wisdom: { color: 'border-purple bg-purple/10 text-purple', label: 'Real Wisdom' },
@@ -37,6 +39,8 @@ export default function ActivityFeed({
   const [entries, setEntries] = useState<ActivityEntry[]>(initial);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initial.length >= PAGE_SIZE);
+  const [collapsed, toggleCollapse] = useCollapse(`activity-${dealId ?? 'global'}`, false);
+  const latestEntry = entries[0];
 
   async function loadMore() {
     if (!dealId || loading) return;
@@ -60,10 +64,23 @@ export default function ActivityFeed({
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20">
-        <h2 className="font-serif text-xl">Activity</h2>
-        <p className="text-midgray text-xs">Most recent first</p>
+      <div className={`px-6 py-4 ${collapsed ? '' : 'border-b border-teal-mid/20'}`}>
+        <button
+          onClick={toggleCollapse}
+          className="flex items-center gap-3 text-left w-full hover:text-teal-light transition"
+        >
+          <SectionToggle collapsed={collapsed} />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-serif text-xl">Activity</h2>
+            <p className="text-midgray text-xs truncate">
+              {collapsed && latestEntry
+                ? `Latest: ${latestEntry.action.slice(0, 80)}${latestEntry.action.length > 80 ? '…' : ''}`
+                : `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} · most recent first`}
+            </p>
+          </div>
+        </button>
       </div>
+      {!collapsed && (
       <ul className="px-6 py-4 space-y-4 max-h-96 overflow-y-auto">
         {entries.map((e) => {
           const t = e.type ? TYPE_STYLES[e.type] ?? TYPE_STYLES.system : TYPE_STYLES.system;
@@ -87,7 +104,8 @@ export default function ActivityFeed({
           <li className="text-sm text-midgray">No activity yet.</li>
         )}
       </ul>
-      {hasMore && dealId && (
+      )}
+      {!collapsed && hasMore && dealId && (
         <div className="border-t border-teal-mid/15 p-3 text-center">
           <button
             onClick={loadMore}

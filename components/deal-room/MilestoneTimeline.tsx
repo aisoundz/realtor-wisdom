@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
 import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
+import { useCollapse } from '@/lib/hooks/useCollapse';
 import type { Milestone } from '@/lib/types';
 import AddMilestoneForm from './AddMilestoneForm';
+import SectionToggle from './SectionToggle';
 
 const MILESTONE_CYCLE = ['todo', 'active', 'done'];
 
@@ -35,7 +37,10 @@ export default function MilestoneTimeline({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [collapsed, toggleCollapse] = useCollapse(`milestones-${dealId}`, false);
   const nextSortOrder = milestones.length > 0 ? Math.max(...milestones.map((m) => m.sort_order)) + 1 : 0;
+  const doneCount = milestones.filter((m) => m.status === 'done').length;
+  const activeMilestone = milestones.find((m) => m.status === 'active');
 
   async function cycleStatus(m: Milestone, e: React.MouseEvent) {
     e.stopPropagation();
@@ -72,14 +77,27 @@ export default function MilestoneTimeline({
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-xl">Milestones</h2>
-          <p className="text-midgray text-xs">From LOI to stabilization</p>
-        </div>
+      <div className={`px-6 py-4 flex items-center justify-between gap-3 ${collapsed ? '' : 'border-b border-teal-mid/20'}`}>
         <button
-          onClick={() => setAdding(!adding)}
-          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+          onClick={toggleCollapse}
+          className="flex items-center gap-3 text-left flex-1 min-w-0 hover:text-teal-light transition"
+        >
+          <SectionToggle collapsed={collapsed} />
+          <div className="min-w-0">
+            <h2 className="font-serif text-xl">Milestones</h2>
+            <p className="text-midgray text-xs">
+              {collapsed
+                ? `${doneCount}/${milestones.length} done${activeMilestone ? ` · current: ${activeMilestone.name}` : ''}`
+                : 'From LOI to stabilization'}
+            </p>
+          </div>
+        </button>
+        <button
+          onClick={() => {
+            if (collapsed) toggleCollapse();
+            setAdding(!adding);
+          }}
+          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium shrink-0"
         >
           {adding ? 'Close' : '+ Add milestone'}
         </button>
@@ -91,6 +109,7 @@ export default function MilestoneTimeline({
           onClose={() => setAdding(false)}
         />
       )}
+      {!collapsed && (
       <ol className="px-6 py-6 space-y-4">
         {milestones.map((m, idx) => {
           const styleCircle = STATUS_STYLES[m.status] ?? STATUS_STYLES.todo;
@@ -151,6 +170,7 @@ export default function MilestoneTimeline({
           );
         })}
       </ol>
+      )}
     </section>
   );
 }
