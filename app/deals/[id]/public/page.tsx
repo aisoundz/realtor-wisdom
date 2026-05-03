@@ -1,8 +1,57 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const supabase = createClient();
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('name, city, state, total_cost, real_impact_score, ami_targeting, unit_count')
+    .eq('id', params.id)
+    .eq('is_public', true)
+    .single();
+
+  if (!deal) {
+    return { title: 'Deal not found · Realtor Wisdom' };
+  }
+
+  const location = [deal.city, deal.state].filter(Boolean).join(', ');
+  const subtitle = [
+    deal.unit_count ? `${deal.unit_count} units` : null,
+    deal.ami_targeting,
+    deal.total_cost
+      ? `$${(deal.total_cost / 1_000_000).toFixed(1)}M deal`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const description = `${deal.name} in ${location}. ${subtitle}. RIS ${deal.real_impact_score ?? 0}. Built on Realtor Wisdom — the real estate capital operating system.`;
+
+  return {
+    title: `${deal.name} · Realtor Wisdom`,
+    description,
+    openGraph: {
+      title: `${deal.name} — ${location}`,
+      description,
+      url: `https://realtorwisdom.io/deals/${params.id}/public`,
+      siteName: 'Realtor Wisdom',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${deal.name} — ${location}`,
+      description,
+    },
+  };
+}
 
 const STATUS_STYLES: Record<string, string> = {
   approved: 'bg-teal/15 text-teal border-teal/30',

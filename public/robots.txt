@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /deals/*/public
+Disallow: /auth/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /api/
+Disallow: /deals/new
+
+Sitemap: https://realtorwisdom.io/sitemap.xml

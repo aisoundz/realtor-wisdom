@@ -250,6 +250,17 @@ drop policy if exists "Anyone reads public deals" on deals;
 create policy "Anyone reads public deals" on deals
   for select using (is_public = true);
 
+-- Anonymous visitors to public deal profiles need to read child data too.
+-- These policies allow read-only access to capital_sources and milestones
+-- for any deal that has is_public = true.
+drop policy if exists "Anyone reads public deal sources" on capital_sources;
+create policy "Anyone reads public deal sources" on capital_sources
+  for select using (deal_id in (select id from deals where is_public = true));
+
+drop policy if exists "Anyone reads public deal milestones" on milestones;
+create policy "Anyone reads public deal milestones" on milestones
+  for select using (deal_id in (select id from deals where is_public = true));
+
 -- Capital sources scoped to deals the user can see
 drop policy if exists "Users see their deal sources" on capital_sources;
 create policy "Users see their deal sources" on capital_sources

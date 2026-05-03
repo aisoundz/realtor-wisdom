@@ -81,6 +81,17 @@ export default function NewDealForm() {
     const totalCostNum = totalCost ? Number(totalCost.replace(/[^0-9]/g, '')) : null;
     const unitCountNum = unitCount ? Number(unitCount) : null;
 
+    if (totalCostNum != null && totalCostNum < 1) {
+      setError('Total project cost must be at least $1.');
+      setLoading(false);
+      return;
+    }
+    if (unitCountNum != null && unitCountNum < 0) {
+      setError('Unit count cannot be negative.');
+      setLoading(false);
+      return;
+    }
+
     const { data: deal, error: dealErr } = await supabase
       .from('deals')
       .insert({

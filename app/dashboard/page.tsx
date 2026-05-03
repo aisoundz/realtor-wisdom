@@ -24,15 +24,15 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-teal-deep text-offwhite">
-      <header className="border-b border-teal-mid/30 px-8 py-5 flex items-center justify-between">
-        <div>
+      <header className="border-b border-teal-mid/30 px-4 sm:px-8 py-5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
           <h1 className="font-serif text-2xl">
             Realtor <span className="text-teal">Wisdom</span>
           </h1>
-          <p className="text-midgray text-sm">Welcome back, {user.email}</p>
+          <p className="text-midgray text-sm truncate">Welcome back, {user.email}</p>
         </div>
-        <div className="flex items-center gap-6">
-          <nav className="flex gap-6 text-sm">
+        <div className="flex items-center gap-4 sm:gap-6 ml-auto">
+          <nav className="hidden md:flex gap-6 text-sm">
             <Link href="/dashboard" className="text-teal">Deals</Link>
             <Link href="/marketplace" className="hover:text-teal">Marketplace</Link>
             <Link href="/portfolio" className="hover:text-teal">Portfolio</Link>

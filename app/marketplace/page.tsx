@@ -24,13 +24,13 @@ export default async function MarketplacePage() {
 
   return (
     <main className="min-h-screen bg-teal-deep text-offwhite">
-      <header className="border-b border-teal-mid/30 px-8 py-5 flex items-center justify-between">
+      <header className="border-b border-teal-mid/30 px-4 sm:px-8 py-5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 text-sm">
           <Link href="/dashboard" className="text-midgray hover:text-teal">← Dashboard</Link>
         </div>
         <h1 className="font-serif text-xl">Capital Marketplace</h1>
-        <div className="flex items-center gap-6">
-          <nav className="flex gap-6 text-sm">
+        <div className="flex items-center gap-4 sm:gap-6 ml-auto">
+          <nav className="hidden md:flex gap-6 text-sm">
             <Link href="/dashboard" className="text-midgray hover:text-teal">Deals</Link>
             <Link href="/marketplace" className="text-teal">Marketplace</Link>
             <Link href="/portfolio" className="text-midgray hover:text-teal">Portfolio</Link>

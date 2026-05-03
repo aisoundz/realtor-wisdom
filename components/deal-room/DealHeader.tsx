@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Deal } from '@/lib/types';
 import UserMenu from '@/components/UserMenu';
 import PublicToggle from './PublicToggle';
+import DeleteDealButton from './DeleteDealButton';
 
 function formatMoney(amount: number | null): string {
   if (amount == null) return '—';
@@ -16,17 +17,17 @@ export default function DealHeader({ deal, secured, userEmail }: { deal: Deal; s
 
   return (
     <header className="border-b border-teal-mid/30 bg-teal-deep">
-      <div className="px-8 py-4 flex items-center justify-between border-b border-teal-mid/20">
-        <div className="flex items-center gap-3 text-sm">
-          <Link href="/dashboard" className="text-midgray hover:text-teal">← Deals</Link>
-          <span className="text-midgray">/</span>
-          <span className="font-medium">{deal.name}</span>
-          <span className="ml-2 text-xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal/15 text-teal border border-teal/30">
+      <div className="px-4 sm:px-8 py-4 flex items-center justify-between border-b border-teal-mid/20 gap-4 flex-wrap">
+        <div className="flex items-center gap-3 text-sm min-w-0">
+          <Link href="/dashboard" className="text-midgray hover:text-teal shrink-0">← Deals</Link>
+          <span className="text-midgray shrink-0">/</span>
+          <span className="font-medium truncate">{deal.name}</span>
+          <span className="ml-2 text-xs uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal/15 text-teal border border-teal/30 shrink-0">
             {deal.status}
           </span>
         </div>
-        <div className="flex items-center gap-6">
-          <nav className="flex gap-6 text-sm">
+        <div className="flex items-center gap-4 sm:gap-6 ml-auto">
+          <nav className="hidden md:flex gap-6 text-sm">
             <Link href="/dashboard" className="text-midgray hover:text-teal">Deals</Link>
             <Link href="/marketplace" className="text-midgray hover:text-teal">Marketplace</Link>
             <Link href="/portfolio" className="text-midgray hover:text-teal">Portfolio</Link>
@@ -47,7 +48,10 @@ export default function DealHeader({ deal, secured, userEmail }: { deal: Deal; s
               {deal.ami_targeting ? ` · ${deal.ami_targeting}` : ''}
             </p>
           </div>
-          <PublicToggle dealId={deal.id} isPublic={deal.is_public} />
+          <div className="flex items-center gap-3 flex-wrap">
+            <PublicToggle dealId={deal.id} isPublic={deal.is_public} />
+            <DeleteDealButton dealId={deal.id} dealName={deal.name} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
