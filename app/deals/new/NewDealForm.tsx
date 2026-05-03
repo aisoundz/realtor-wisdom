@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { DEAL_TEMPLATES, getTemplateById } from '@/lib/deal-templates';
+import { recalculateAndPersistRIS } from '@/lib/ris/recalculate';
 
 const DEAL_TYPES = [
   { value: 'mixed_use_affordable', label: 'Mixed-use affordable' },
@@ -37,6 +39,16 @@ export default function NewDealForm() {
   const [totalCost, setTotalCost] = useState('');
   const [unitCount, setUnitCount] = useState('');
   const [amiTargeting, setAmiTargeting] = useState('60% AMI');
+  const [templateId, setTemplateId] = useState<string>('');
+
+  function applyTemplate(id: string) {
+    setTemplateId(id);
+    const t = getTemplateById(id);
+    if (t) {
+      setDealType(t.defaultDealType);
+      setAmiTargeting(t.defaultAmiTargeting);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,14 +130,60 @@ export default function NewDealForm() {
       return;
     }
 
-    // Seed the activity feed with the creation event so the deal room isn't empty
+    // If a template was selected, bulk-insert capital sources, checklist, milestones
+    const template = templateId ? getTemplateById(templateId) : null;
+    if (template) {
+      const totalForCalc = totalCostNum ?? 1_000_000; // sensible default if no total set
+      await supabase.from('capital_sources').insert(
+        template.capital.map((c, i) => ({
+          deal_id: deal.id,
+          name: c.name,
+          source_type: c.source_type,
+          committed_amount: Math.round(totalForCalc * c.pct),
+          status: c.status,
+          notes: c.notes ?? null,
+          sort_order: i,
+        }))
+      );
+      await supabase.from('checklist_items').insert(
+        template.checklist.map((c, i) => ({
+          deal_id: deal.id,
+          phase: c.phase,
+          name: c.name,
+          status: 'todo',
+          blocking_close: c.blocking_close ?? false,
+          sort_order: i,
+        }))
+      );
+      const today = new Date();
+      await supabase.from('milestones').insert(
+        template.milestones.map((m, i) => {
+          const target = new Date(today);
+          target.setDate(target.getDate() + m.daysOut);
+          return {
+            deal_id: deal.id,
+            name: m.name,
+            status: 'todo',
+            target_date: target.toISOString().slice(0, 10),
+            sort_order: i,
+          };
+        })
+      );
+    }
+
+    // Seed the activity feed with the creation event
     await supabase.from('activity_log').insert({
       deal_id: deal.id,
       org_id: orgId,
       actor: 'You',
-      action: `Deal created — ${name}${city || state ? `, ${[city, state].filter(Boolean).join(', ')}` : ''}${totalCostNum ? ` ($${(totalCostNum / 1_000_000).toFixed(1)}M)` : ''}`,
+      action: template
+        ? `Deal created from "${template.label}" template — ${name}`
+        : `Deal created — ${name}${city || state ? `, ${[city, state].filter(Boolean).join(', ')}` : ''}${totalCostNum ? ` ($${(totalCostNum / 1_000_000).toFixed(1)}M)` : ''}`,
       type: 'system',
     });
+
+    // Compute initial RIS so the deal room doesn't show 50
+    await recalculateAndPersistRIS(supabase, deal.id);
 
     router.push(`/deals/${deal.id}`);
     router.refresh();
@@ -133,6 +191,41 @@ export default function NewDealForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-charcoal/30 border border-purple/30 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-medium text-purple-light">Start from a template</h3>
+            <p className="text-xs text-midgray">Preloads typical capital stack, checklist, and milestones — saves ~30 min.</p>
+          </div>
+          {templateId && (
+            <button
+              type="button"
+              onClick={() => setTemplateId('')}
+              className="text-xs text-midgray hover:text-offwhite"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {DEAL_TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => applyTemplate(t.id)}
+              className={`text-left p-3 rounded-lg border transition ${
+                templateId === t.id
+                  ? 'bg-purple/15 border-purple text-offwhite'
+                  : 'bg-charcoal/40 border-teal-mid/30 hover:border-purple/50'
+              }`}
+            >
+              <div className="text-sm font-medium mb-1">{t.label}</div>
+              <div className="text-xs text-midgray leading-snug">{t.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Field label="Deal name" required>
         <input
           type="text"

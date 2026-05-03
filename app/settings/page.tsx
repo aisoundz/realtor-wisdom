@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import UserMenu from '@/components/UserMenu';
 import SettingsForm from './SettingsForm';
+import DangerZone from './DangerZone';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,8 @@ export default async function SettingsPage() {
             Team invites, notification preferences, API access, and Real Wisdom voice settings.
           </p>
         </section>
+
+        <DangerZone userEmail={user.email!} />
       </div>
     </main>
   );

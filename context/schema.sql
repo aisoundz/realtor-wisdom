@@ -163,6 +163,26 @@ create table if not exists belief_capital_moments (
 );
 
 -- =====================================================
+-- Real Wisdom conversations (chat history per deal)
+-- =====================================================
+
+create table if not exists wisdom_conversations (
+  id uuid primary key default gen_random_uuid(),
+  deal_id uuid references deals on delete cascade,
+  user_id uuid references auth.users on delete cascade,
+  title text,
+  messages jsonb not null default '[]'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists wisdom_conversations_deal_idx
+  on wisdom_conversations(deal_id, updated_at desc);
+
+create index if not exists wisdom_conversations_user_idx
+  on wisdom_conversations(user_id, updated_at desc);
+
+-- =====================================================
 -- Capital marketplace
 -- =====================================================
 
@@ -228,6 +248,11 @@ alter table belief_capital_moments enable row level security;
 alter table portfolio_entries enable row level security;
 alter table marketplace_matches enable row level security;
 alter table profiles enable row level security;
+alter table wisdom_conversations enable row level security;
+
+drop policy if exists "Users see their wisdom conversations" on wisdom_conversations;
+create policy "Users see their wisdom conversations" on wisdom_conversations
+  for all using (user_id = auth.uid());
 
 -- Profiles: a user can read their own profile
 drop policy if exists "Users read own profile" on profiles;
@@ -366,3 +391,27 @@ create trigger deals_updated_at before update on deals
 drop trigger if exists capital_sources_updated_at on capital_sources;
 create trigger capital_sources_updated_at before update on capital_sources
   for each row execute function public.set_updated_at();
+
+-- =====================================================
+-- Account deletion — SECURITY DEFINER function lets users delete
+-- their own auth.users row. Cascade through profiles, deals, and
+-- everything tied to those.
+-- =====================================================
+
+create or replace function public.delete_user()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+  -- Cascade through profiles (which deletes deals → cascades through children)
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_user() from public;
+grant execute on function public.delete_user() to authenticated;

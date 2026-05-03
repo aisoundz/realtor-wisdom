@@ -54,6 +54,11 @@ export default function RealWisdomPanel({
   const [showLogForm, setShowLogForm] = useState(false);
   const [logValue, setLogValue] = useState('');
   const [listening, setListening] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [pastConversations, setPastConversations] = useState<
+    { id: string; title: string | null; updated_at: string; messages: Message[] }[]
+  >([]);
+  const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initialisedFor = useRef<string>('');
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -64,6 +69,28 @@ export default function RealWisdomPanel({
     const triggerKey = JSON.stringify(trigger);
     if (initialisedFor.current === triggerKey) return;
     initialisedFor.current = triggerKey;
+
+    setConversationId(null);
+    setShowHistory(false);
+
+    // Load past conversations for this deal
+    if (dealContext.deal?.id) {
+      const supabase = createClient();
+      void supabase
+        .from('wisdom_conversations')
+        .select('id, title, updated_at, messages')
+        .eq('deal_id', dealContext.deal.id)
+        .order('updated_at', { ascending: false })
+        .limit(10)
+        .then(({ data }) => {
+          setPastConversations(
+            (data ?? []).map((c) => ({
+              ...c,
+              messages: Array.isArray(c.messages) ? (c.messages as Message[]) : [],
+            }))
+          );
+        });
+    }
 
     const seedPrompt = buildPromptForTrigger(trigger);
     if (seedPrompt) {
@@ -132,7 +159,67 @@ export default function RealWisdomPanel({
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setStreaming(false);
+      // Persist conversation after each round (user + assistant message)
+      if (dealContext.deal?.id) {
+        await persistConversation();
+      }
     }
+  }
+
+  async function persistConversation() {
+    if (!dealContext.deal?.id) return;
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    // Build a latest snapshot — read messages via callback to avoid stale closure
+    const currentMessages = await new Promise<Message[]>((resolve) => {
+      setMessages((m) => {
+        resolve(m);
+        return m;
+      });
+    });
+    const title = currentMessages[0]?.content?.slice(0, 80) ?? null;
+
+    if (conversationId) {
+      await supabase
+        .from('wisdom_conversations')
+        .update({
+          messages: currentMessages,
+          title,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', conversationId);
+    } else {
+      const { data } = await supabase
+        .from('wisdom_conversations')
+        .insert({
+          deal_id: dealContext.deal.id,
+          user_id: user.id,
+          title,
+          messages: currentMessages,
+        })
+        .select('id')
+        .single();
+      if (data?.id) {
+        setConversationId(data.id);
+      }
+    }
+  }
+
+  function loadConversation(c: { id: string; messages: Message[] }) {
+    setConversationId(c.id);
+    setMessages(c.messages);
+    setShowHistory(false);
+    setError(null);
+  }
+
+  function startFresh() {
+    setConversationId(null);
+    setMessages([]);
+    setShowHistory(false);
+    setError(null);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -239,14 +326,62 @@ export default function RealWisdomPanel({
             <span className="w-2 h-2 rounded-full bg-purple animate-pulse" />
             <h3 className="font-serif text-lg text-purple-light">Real Wisdom</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-midgray hover:text-offwhite text-xl leading-none px-2"
-            aria-label="Close"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            {dealContext.deal?.id && pastConversations.length > 0 && (
+              <button
+                onClick={() => setShowHistory((v) => !v)}
+                className="text-xs text-midgray hover:text-purple-light px-2 py-1 rounded transition"
+                title="Past conversations"
+              >
+                {pastConversations.length} past
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-midgray hover:text-offwhite text-xl leading-none px-2"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
         </header>
+
+        {showHistory && (
+          <div className="border-b border-purple/20 bg-charcoal/60 max-h-64 overflow-y-auto">
+            <div className="px-4 py-3 flex items-center justify-between text-xs text-midgray border-b border-purple/15">
+              <span>Past conversations</span>
+              <button
+                onClick={startFresh}
+                className="text-purple-light hover:text-purple"
+              >
+                + Start fresh
+              </button>
+            </div>
+            <ul>
+              {pastConversations.map((c) => (
+                <li
+                  key={c.id}
+                  onClick={() => loadConversation(c)}
+                  className={`px-4 py-3 cursor-pointer hover:bg-charcoal/80 transition border-b last:border-b-0 border-purple/10 ${
+                    c.id === conversationId ? 'bg-purple/15' : ''
+                  }`}
+                >
+                  <div className="text-sm truncate">{c.title || 'Untitled conversation'}</div>
+                  <div className="text-xs text-midgray mt-0.5">
+                    {new Date(c.updated_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: 'numeric',
+                    })}
+                    {' · '}
+                    {c.messages.length} message{c.messages.length === 1 ? '' : 's'}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           {messages.length === 0 && !streaming && (
