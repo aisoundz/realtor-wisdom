@@ -215,6 +215,9 @@ create table if not exists portfolio_entries (
 -- @supabase/ssr where auth.uid() can be null in some route handler contexts.
 alter table organizations disable row level security;
 
+-- Marketplace sources: global catalog, shared across all users. No org scoping needed.
+alter table marketplace_sources disable row level security;
+
 alter table deals enable row level security;
 alter table capital_sources enable row level security;
 alter table checklist_items enable row level security;
