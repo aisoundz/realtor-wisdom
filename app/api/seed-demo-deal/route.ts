@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 // One-click seed: creates the "Southside Commons" deal that mirrors the
 // marketing site's Live Demo card — full capital stack, compliance, milestones,
-// stakeholders, and activity. Run this once and the dashboard becomes a working
-// demo of the whole product.
+// stakeholders, and activity. Uses the regular auth client (publishable key +
+// user session). RLS lets the user create org/deal/etc. for their own account.
 export async function POST() {
   const supabase = createClient();
   const {
@@ -14,32 +14,40 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const admin = createServiceClient();
-
-  // 1. Ensure the user has an org (create a personal one if missing)
-  const { data: profile } = await admin
+  // 1. Ensure the user has a profile + org
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('id, org_id, name')
     .eq('id', user.id)
     .single();
 
+  if (profileErr) {
+    return NextResponse.json({ error: `profile_lookup: ${profileErr.message}` }, { status: 500 });
+  }
+
   let orgId = profile?.org_id as string | null;
   if (!orgId) {
-    const { data: newOrg, error: orgErr } = await admin
+    const orgName = profile?.name ? `${profile.name}'s Organization` : 'My Organization';
+    const { data: newOrg, error: orgErr } = await supabase
       .from('organizations')
-      .insert({
-        name: profile?.name ? `${profile.name}'s Organization` : 'My Organization',
-        type: 'developer',
-      })
+      .insert({ name: orgName, type: 'developer' })
       .select('id')
       .single();
-    if (orgErr) return NextResponse.json({ error: orgErr.message }, { status: 500 });
+    if (orgErr) {
+      return NextResponse.json({ error: `org_create: ${orgErr.message}` }, { status: 500 });
+    }
     orgId = newOrg.id;
-    await admin.from('profiles').update({ org_id: orgId }).eq('id', user.id);
+    const { error: profUpdErr } = await supabase
+      .from('profiles')
+      .update({ org_id: orgId })
+      .eq('id', user.id);
+    if (profUpdErr) {
+      return NextResponse.json({ error: `profile_update: ${profUpdErr.message}` }, { status: 500 });
+    }
   }
 
   // 2. Create the deal
-  const { data: deal, error: dealErr } = await admin
+  const { data: deal, error: dealErr } = await supabase
     .from('deals')
     .insert({
       org_id: orgId,
@@ -58,19 +66,22 @@ export async function POST() {
     })
     .select('id')
     .single();
-  if (dealErr) return NextResponse.json({ error: dealErr.message }, { status: 500 });
+  if (dealErr) {
+    return NextResponse.json({ error: `deal_create: ${dealErr.message}` }, { status: 500 });
+  }
 
   const dealId = deal.id;
 
   // 3. Capital stack — matches the marketing demo card
-  await admin.from('capital_sources').insert([
+  const { error: capErr } = await supabase.from('capital_sources').insert([
     {
       deal_id: dealId,
       name: 'Apex Impact Fund',
       source_type: 'impact_loan',
       committed_amount: 2100000,
       status: 'approved',
-      notes: '+$400K available on your approved loan — Real Wisdom recommends drawing down before construction close to lower blended cost of capital',
+      notes:
+        '+$400K available on your approved loan — Real Wisdom recommends drawing down before construction close to lower blended cost of capital',
       sort_order: 0,
     },
     {
@@ -79,7 +90,8 @@ export async function POST() {
       source_type: 'cdfi',
       committed_amount: 1200000,
       status: 'pending',
-      notes: 'Doc missing — blocking close in 3 days. Form 8821 + draft op agreement needed by Friday',
+      notes:
+        'Doc missing — blocking close in 3 days. Form 8821 + draft op agreement needed by Friday',
       sort_order: 1,
     },
     {
@@ -118,9 +130,12 @@ export async function POST() {
       sort_order: 5,
     },
   ]);
+  if (capErr) {
+    return NextResponse.json({ error: `capital_sources: ${capErr.message}` }, { status: 500 });
+  }
 
   // 4. Compliance checklist
-  await admin.from('checklist_items').insert([
+  const { error: chkErr } = await supabase.from('checklist_items').insert([
     { deal_id: dealId, phase: 'pre_development', name: 'Site control secured', status: 'done', sort_order: 0 },
     { deal_id: dealId, phase: 'pre_development', name: 'Environmental Phase I complete', status: 'done', sort_order: 1 },
     { deal_id: dealId, phase: 'pre_development', name: 'Zoning verified', status: 'done', sort_order: 2 },
@@ -139,9 +154,12 @@ export async function POST() {
     { deal_id: dealId, phase: 'post_close', name: 'Lease-up & marketing plan', status: 'todo', sort_order: 1 },
     { deal_id: dealId, phase: 'post_close', name: 'Compliance reporting setup', status: 'todo', sort_order: 2 },
   ]);
+  if (chkErr) {
+    return NextResponse.json({ error: `checklist: ${chkErr.message}` }, { status: 500 });
+  }
 
   // 5. Milestones
-  await admin.from('milestones').insert([
+  const { error: milErr } = await supabase.from('milestones').insert([
     { deal_id: dealId, name: 'LOI signed', status: 'done', target_date: '2026-01-15', completed_date: '2026-01-12', sort_order: 0 },
     { deal_id: dealId, name: 'Capital stack committed', status: 'active', target_date: '2026-05-15', sort_order: 1 },
     { deal_id: dealId, name: 'Construction loan close', status: 'todo', target_date: '2026-06-30', sort_order: 2 },
@@ -149,28 +167,37 @@ export async function POST() {
     { deal_id: dealId, name: 'Certificate of occupancy', status: 'todo', target_date: '2027-04-30', sort_order: 4 },
     { deal_id: dealId, name: 'Stabilization (95% leased)', status: 'todo', target_date: '2027-10-31', sort_order: 5 },
   ]);
+  if (milErr) {
+    return NextResponse.json({ error: `milestones: ${milErr.message}` }, { status: 500 });
+  }
 
   // 6. Stakeholders
-  await admin.from('deal_stakeholders').insert([
+  const { error: stkErr } = await supabase.from('deal_stakeholders').insert([
     { deal_id: dealId, name: 'Sarah Chen', role: 'Senior Investment Officer · Apex Impact Fund', status: 'active', action_items: 0 },
     { deal_id: dealId, name: 'Marcus Williams', role: 'Loan Officer · Bridgeview CDFI', status: 'active', action_items: 1 },
     { deal_id: dealId, name: 'Jen Park', role: 'NMTC Equity Manager · Greenway Capital', status: 'active', action_items: 0 },
     { deal_id: dealId, name: 'David Torres', role: 'TIF Coordinator · City of Detroit', status: 'active', action_items: 0 },
     { deal_id: dealId, name: 'Karen Liu', role: 'Construction Lender Counsel', status: 'pending', action_items: 0 },
   ]);
+  if (stkErr) {
+    return NextResponse.json({ error: `stakeholders: ${stkErr.message}` }, { status: 500 });
+  }
 
-  // 7. Activity log (most recent first via timestamp)
+  // 7. Activity log
   const now = Date.now();
-  await admin.from('activity_log').insert([
+  const { error: actErr } = await supabase.from('activity_log').insert([
     {
       deal_id: dealId,
+      org_id: orgId,
       actor: 'Real Wisdom',
-      action: 'Flagged Bridgeview CDFI doc gap — blocks construction close in 3 days. Identified Form 8821 + draft operating agreement as the missing pieces.',
+      action:
+        'Flagged Bridgeview CDFI doc gap — blocks construction close in 3 days. Identified Form 8821 + draft operating agreement as the missing pieces.',
       type: 'real_wisdom',
       created_at: new Date(now - 1000 * 60 * 60 * 2).toISOString(),
     },
     {
       deal_id: dealId,
+      org_id: orgId,
       actor: 'Sarah Chen · Apex Impact Fund',
       action: 'Confirmed +$400K commitment increase on senior loan',
       type: 'stakeholder',
@@ -178,13 +205,16 @@ export async function POST() {
     },
     {
       deal_id: dealId,
+      org_id: orgId,
       actor: 'Real Wisdom',
-      action: 'Identified $400K of unclaimed capacity on the Apex loan — recommended drawing down before close to reduce blended COC by 40 bps',
+      action:
+        'Identified $400K of unclaimed capacity on the Apex loan — recommended drawing down before close to reduce blended COC by 40 bps',
       type: 'real_wisdom',
       created_at: new Date(now - 1000 * 60 * 60 * 18).toISOString(),
     },
     {
       deal_id: dealId,
+      org_id: orgId,
       actor: 'System',
       action: 'City of Detroit Council approved PILOT + TIF allocation',
       type: 'system',
@@ -192,19 +222,25 @@ export async function POST() {
     },
     {
       deal_id: dealId,
+      org_id: orgId,
       actor: 'Belief Capital',
-      action: 'Apex Impact Fund committed senior debt 8 weeks before any peer institution would underwrite the deal — survived a stalled period that would have killed the project',
+      action:
+        'Apex Impact Fund committed senior debt 8 weeks before any peer institution would underwrite the deal — survived a stalled period that would have killed the project',
       type: 'belief_capital',
       created_at: new Date(now - 1000 * 60 * 60 * 24 * 90).toISOString(),
     },
   ]);
+  if (actErr) {
+    return NextResponse.json({ error: `activity: ${actErr.message}` }, { status: 500 });
+  }
 
-  // 8. Belief capital moment record
-  await admin.from('belief_capital_moments').insert([
+  // 8. Belief capital moment
+  await supabase.from('belief_capital_moments').insert([
     {
       deal_id: dealId,
       developer_org_id: orgId,
-      description: 'Apex Impact Fund committed senior debt 8 weeks before any peer institution would underwrite the deal',
+      description:
+        'Apex Impact Fund committed senior debt 8 weeks before any peer institution would underwrite the deal',
       moment_type: 'survival_intervention',
       downstream_value: 7200000,
     },
