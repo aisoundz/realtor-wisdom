@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { Milestone } from '@/lib/types';
+import AddMilestoneForm from './AddMilestoneForm';
 
 const STATUS_STYLES: Record<string, string> = {
   done: 'bg-teal text-offwhite border-teal',
@@ -16,16 +18,36 @@ function formatDate(d: string | null) {
 export default function MilestoneTimeline({
   milestones,
   onSelect,
+  dealId,
 }: {
   milestones: Milestone[];
   onSelect: (m: Milestone) => void;
+  dealId: string;
 }) {
+  const [adding, setAdding] = useState(false);
+  const nextSortOrder = milestones.length > 0 ? Math.max(...milestones.map((m) => m.sort_order)) + 1 : 0;
+
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20">
-        <h2 className="font-serif text-xl">Milestones</h2>
-        <p className="text-midgray text-xs">From LOI to stabilization</p>
+      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-xl">Milestones</h2>
+          <p className="text-midgray text-xs">From LOI to stabilization</p>
+        </div>
+        <button
+          onClick={() => setAdding(!adding)}
+          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+        >
+          {adding ? 'Close' : '+ Add milestone'}
+        </button>
       </div>
+      {adding && (
+        <AddMilestoneForm
+          dealId={dealId}
+          nextSortOrder={nextSortOrder}
+          onClose={() => setAdding(false)}
+        />
+      )}
       <ol className="px-6 py-6 space-y-4">
         {milestones.map((m, idx) => {
           const styleCircle = STATUS_STYLES[m.status] ?? STATUS_STYLES.todo;

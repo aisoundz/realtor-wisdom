@@ -1,4 +1,8 @@
+'use client';
+
+import { useState } from 'react';
 import type { Stakeholder } from '@/lib/types';
+import AddStakeholderForm from './AddStakeholderForm';
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-teal/15 text-teal border-teal/30',
@@ -6,13 +10,35 @@ const STATUS_STYLES: Record<string, string> = {
   inactive: 'bg-charcoal/60 text-midgray border-midgray/30',
 };
 
-export default function StakeholderPanel({ stakeholders }: { stakeholders: Stakeholder[] }) {
+export default function StakeholderPanel({
+  stakeholders,
+  dealId,
+}: {
+  stakeholders: Stakeholder[];
+  dealId: string;
+}) {
+  const [adding, setAdding] = useState(false);
+
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-teal-mid/20">
-        <h2 className="font-serif text-xl">Stakeholders</h2>
-        <p className="text-midgray text-xs">{stakeholders.length} active in this deal</p>
+      <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-xl">Stakeholders</h2>
+          <p className="text-midgray text-xs">{stakeholders.length} active in this deal</p>
+        </div>
+        <button
+          onClick={() => setAdding(!adding)}
+          className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+        >
+          {adding ? 'Close' : '+ Add stakeholder'}
+        </button>
       </div>
+      {adding && (
+        <AddStakeholderForm
+          dealId={dealId}
+          onClose={() => setAdding(false)}
+        />
+      )}
       <ul className="divide-y divide-teal-mid/15">
         {stakeholders.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.active;

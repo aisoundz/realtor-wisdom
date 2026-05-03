@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { ChecklistItem } from '@/lib/types';
+import AddChecklistItemForm from './AddChecklistItemForm';
 
 const PHASE_LABELS: Record<string, string> = {
   pre_development: 'Pre-development',
@@ -19,10 +21,13 @@ const STATUS_DOT: Record<string, string> = {
 export default function ComplianceChecklist({
   items,
   onSelect,
+  dealId,
 }: {
   items: ChecklistItem[];
   onSelect: (item: ChecklistItem) => void;
+  dealId: string;
 }) {
+  const [adding, setAdding] = useState(false);
   // Group by phase
   const byPhase = items.reduce<Record<string, ChecklistItem[]>>((acc, item) => {
     const k = item.phase ?? 'unknown';
@@ -42,12 +47,26 @@ export default function ComplianceChecklist({
           <h2 className="font-serif text-xl">Compliance checklist</h2>
           <p className="text-midgray text-xs">Click an item to ask Real Wisdom</p>
         </div>
-        {blockingCount > 0 && (
-          <span className="text-xs px-2.5 py-1 rounded-full bg-red/15 text-red border border-red/30">
-            {blockingCount} blocking close
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {blockingCount > 0 && (
+            <span className="text-xs px-2.5 py-1 rounded-full bg-red/15 text-red border border-red/30">
+              {blockingCount} blocking close
+            </span>
+          )}
+          <button
+            onClick={() => setAdding(!adding)}
+            className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+          >
+            {adding ? 'Close' : '+ Add item'}
+          </button>
+        </div>
       </div>
+      {adding && (
+        <AddChecklistItemForm
+          dealId={dealId}
+          onClose={() => setAdding(false)}
+        />
+      )}
       <div className="divide-y divide-teal-mid/15">
         {phaseOrder
           .filter((p) => byPhase[p]?.length)

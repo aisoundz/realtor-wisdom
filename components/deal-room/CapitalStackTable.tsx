@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { CapitalSource } from '@/lib/types';
+import AddCapitalSourceForm from './AddCapitalSourceForm';
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   approved: { label: 'Approved', className: 'bg-teal/15 text-teal border-teal/30' },
@@ -35,11 +37,16 @@ export default function CapitalStackTable({
   sources,
   selectedId,
   onSelect,
+  dealId,
 }: {
   sources: CapitalSource[];
   selectedId: string | null;
   onSelect: (source: CapitalSource) => void;
+  dealId: string;
 }) {
+  const [adding, setAdding] = useState(false);
+  const nextSortOrder = sources.length > 0 ? Math.max(...sources.map((s) => s.sort_order)) + 1 : 0;
+
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-teal-mid/20 flex items-center justify-between">
@@ -47,8 +54,23 @@ export default function CapitalStackTable({
           <h2 className="font-serif text-xl">Capital stack</h2>
           <p className="text-midgray text-xs">Click any row to ask Real Wisdom about it</p>
         </div>
-        <span className="text-xs text-midgray">{sources.length} sources</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-midgray">{sources.length} sources</span>
+          <button
+            onClick={() => setAdding(!adding)}
+            className="text-xs bg-teal hover:bg-teal-mid text-offwhite px-3 py-1.5 rounded-lg font-medium"
+          >
+            {adding ? 'Close' : '+ Add source'}
+          </button>
+        </div>
       </div>
+      {adding && (
+        <AddCapitalSourceForm
+          dealId={dealId}
+          nextSortOrder={nextSortOrder}
+          onClose={() => setAdding(false)}
+        />
+      )}
       <ul>
         {sources.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.pending;

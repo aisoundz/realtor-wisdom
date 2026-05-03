@@ -46,6 +46,14 @@ export default async function DashboardPage() {
       <section className="px-8 py-10 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-serif text-3xl">Active deals</h2>
+          {deals && deals.length > 0 && (
+            <Link
+              href="/deals/new"
+              className="bg-teal hover:bg-teal-mid text-offwhite px-5 py-2.5 rounded-lg text-sm font-medium"
+            >
+              + New deal
+            </Link>
+          )}
         </div>
 
         {!deals || deals.length === 0 ? (
@@ -55,6 +63,12 @@ export default async function DashboardPage() {
               See the entire platform working in 5 seconds. Real capital stack, real compliance gaps, real Wisdom insights.
             </p>
             <SeedButton />
+            <p className="text-midgray text-xs mt-6">
+              Or{' '}
+              <Link href="/deals/new" className="text-teal hover:underline">
+                create your own deal from scratch →
+              </Link>
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

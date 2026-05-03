@@ -106,21 +106,24 @@ export default function DealRoom({
           sources={capitalSources}
           selectedId={selectedSourceId}
           onSelect={handleSelectCapital}
+          dealId={deal.id}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ComplianceChecklist
             items={checklist}
             onSelect={(item) => openWisdomFor({ kind: 'checklist', item })}
+            dealId={deal.id}
           />
           <MilestoneTimeline
             milestones={milestones}
             onSelect={(m) => openWisdomFor({ kind: 'milestone', milestone: m })}
+            dealId={deal.id}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <StakeholderPanel stakeholders={stakeholders} />
+          <StakeholderPanel stakeholders={stakeholders} dealId={deal.id} />
           <ActivityFeed entries={activity} />
         </div>
       </main>
