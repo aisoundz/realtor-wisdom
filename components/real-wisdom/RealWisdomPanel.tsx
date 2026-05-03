@@ -198,11 +198,129 @@ function MessageBubble({ message }: { message: Message }) {
   }
   return (
     <div className="flex justify-start">
-      <div className="bg-charcoal/60 border border-purple/20 text-offwhite px-3.5 py-2.5 rounded-2xl rounded-tl-sm max-w-[90%] text-sm leading-relaxed whitespace-pre-wrap">
-        {message.content || <span className="text-midgray italic">…</span>}
+      <div className="bg-charcoal/60 border border-purple/20 text-offwhite px-3.5 py-2.5 rounded-2xl rounded-tl-sm max-w-[90%] text-sm leading-relaxed">
+        {message.content ? <Markdown text={message.content} /> : <span className="text-midgray italic">…</span>}
       </div>
     </div>
   );
+}
+
+// Inline markdown renderer — handles **bold**, *italic*, `code`, line breaks, and bullet lists.
+// Intentionally tiny — no external deps, no dangerouslySetInnerHTML.
+function Markdown({ text }: { text: string }) {
+  const blocks = parseBlocks(text);
+  return (
+    <>
+      {blocks.map((block, i) => {
+        if (block.type === 'list') {
+          return (
+            <ul key={i} className="my-1.5 space-y-1 list-disc list-inside marker:text-purple-light/60">
+              {block.items.map((item, j) => (
+                <li key={j} className="leading-snug">
+                  <Inline text={item} />
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={i} className={i > 0 ? 'mt-2' : ''}>
+            <Inline text={block.text} />
+          </p>
+        );
+      })}
+    </>
+  );
+}
+
+type Block = { type: 'paragraph'; text: string } | { type: 'list'; items: string[] };
+
+function parseBlocks(text: string): Block[] {
+  // Split on blank lines into chunks. Each chunk is either a list (lines starting with -, *, or •)
+  // or a paragraph.
+  const chunks = text.split(/\n\s*\n/);
+  const blocks: Block[] = [];
+  for (const chunk of chunks) {
+    const lines = chunk.split('\n').filter((l) => l.trim().length > 0);
+    if (lines.length === 0) continue;
+    const isList = lines.every((l) => /^\s*[-*•]\s+/.test(l));
+    if (isList) {
+      blocks.push({
+        type: 'list',
+        items: lines.map((l) => l.replace(/^\s*[-*•]\s+/, '')),
+      });
+    } else {
+      // Treat single-newline breaks as soft breaks within the paragraph
+      blocks.push({ type: 'paragraph', text: lines.join(' ') });
+    }
+  }
+  return blocks;
+}
+
+// Render inline markdown: **bold**, *italic*, `code`. Handles nesting safely.
+function Inline({ text }: { text: string }) {
+  // Tokenize via regex captures, preserving the matched delimiters in alternating chunks
+  const tokens = tokenizeInline(text);
+  return (
+    <>
+      {tokens.map((tok, i) => {
+        if (tok.kind === 'bold') return <strong key={i} className="font-semibold text-offwhite">{tok.text}</strong>;
+        if (tok.kind === 'italic') return <em key={i}>{tok.text}</em>;
+        if (tok.kind === 'code')
+          return (
+            <code key={i} className="bg-charcoal/80 border border-teal-mid/30 rounded px-1 py-0.5 text-xs font-mono">
+              {tok.text}
+            </code>
+          );
+        return <span key={i}>{tok.text}</span>;
+      })}
+    </>
+  );
+}
+
+type InlineToken = { kind: 'text' | 'bold' | 'italic' | 'code'; text: string };
+
+function tokenizeInline(input: string): InlineToken[] {
+  const tokens: InlineToken[] = [];
+  let i = 0;
+  while (i < input.length) {
+    // Bold (**text**)
+    if (input.slice(i, i + 2) === '**') {
+      const end = input.indexOf('**', i + 2);
+      if (end !== -1) {
+        tokens.push({ kind: 'bold', text: input.slice(i + 2, end) });
+        i = end + 2;
+        continue;
+      }
+    }
+    // Code (`text`)
+    if (input[i] === '`') {
+      const end = input.indexOf('`', i + 1);
+      if (end !== -1) {
+        tokens.push({ kind: 'code', text: input.slice(i + 1, end) });
+        i = end + 1;
+        continue;
+      }
+    }
+    // Italic (*text*) — only if not part of **
+    if (input[i] === '*' && input[i + 1] !== '*' && input[i - 1] !== '*') {
+      const end = input.indexOf('*', i + 1);
+      if (end !== -1 && input[end + 1] !== '*') {
+        tokens.push({ kind: 'italic', text: input.slice(i + 1, end) });
+        i = end + 1;
+        continue;
+      }
+    }
+    // Plain text — append to last text token or create new one
+    const last = tokens[tokens.length - 1];
+    if (last && last.kind === 'text') {
+      last.text += input[i];
+    } else {
+      tokens.push({ kind: 'text', text: input[i] });
+    }
+    i++;
+  }
+  return tokens;
 }
 
 function buildPromptForTrigger(trigger: WisdomTrigger): string | null {
