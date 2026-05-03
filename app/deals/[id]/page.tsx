@@ -1,10 +1,45 @@
-// Deal Room — capital stack, compliance, milestones, stakeholders, activity, Real Wisdom panel.
-// Placeholder. Built out in next session.
-export default function DealRoomPage({ params }: { params: { id: string } }) {
+import { createClient } from '@/lib/supabase/server';
+import { notFound, redirect } from 'next/navigation';
+import DealRoom from './DealRoom';
+
+export const dynamic = 'force-dynamic';
+
+export default async function DealRoomPage({ params }: { params: { id: string } }) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
+
+  const dealId = params.id;
+
+  // Fetch deal + all related data in parallel
+  const [
+    { data: deal, error: dealErr },
+    { data: capitalSources },
+    { data: checklist },
+    { data: milestones },
+    { data: stakeholders },
+    { data: activity },
+  ] = await Promise.all([
+    supabase.from('deals').select('*').eq('id', dealId).single(),
+    supabase.from('capital_sources').select('*').eq('deal_id', dealId).order('sort_order'),
+    supabase.from('checklist_items').select('*').eq('deal_id', dealId).order('sort_order'),
+    supabase.from('milestones').select('*').eq('deal_id', dealId).order('sort_order'),
+    supabase.from('deal_stakeholders').select('*').eq('deal_id', dealId),
+    supabase.from('activity_log').select('*').eq('deal_id', dealId).order('created_at', { ascending: false }).limit(20),
+  ]);
+
+  if (dealErr || !deal) notFound();
+
   return (
-    <main className="min-h-screen bg-teal-deep text-offwhite p-8">
-      <h1 className="font-serif text-3xl mb-2">Deal {params.id}</h1>
-      <p className="text-midgray">Deal Room shell — capital stack, compliance, milestones, Real Wisdom panel coming next.</p>
-    </main>
+    <DealRoom
+      deal={deal}
+      capitalSources={capitalSources ?? []}
+      checklist={checklist ?? []}
+      milestones={milestones ?? []}
+      stakeholders={stakeholders ?? []}
+      activity={activity ?? []}
+    />
   );
 }
