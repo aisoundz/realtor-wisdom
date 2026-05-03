@@ -205,22 +205,46 @@ function MessageBubble({ message }: { message: Message }) {
   );
 }
 
-// Inline markdown renderer — handles **bold**, *italic*, `code`, line breaks, and bullet lists.
-// Intentionally tiny — no external deps, no dangerouslySetInnerHTML.
+// Inline markdown renderer — handles headings (# ## ###), **bold**, *italic*, `code`,
+// ordered lists (1. 2.), and unordered lists (- * •). No external deps.
 function Markdown({ text }: { text: string }) {
   const blocks = parseBlocks(text);
   return (
     <>
       {blocks.map((block, i) => {
-        if (block.type === 'list') {
+        if (block.type === 'heading') {
+          const sizeClass =
+            block.level === 1
+              ? 'text-lg font-serif text-purple-light'
+              : block.level === 2
+                ? 'text-base font-semibold text-purple-light'
+                : 'text-sm font-semibold text-offwhite';
           return (
-            <ul key={i} className="my-1.5 space-y-1 list-disc list-inside marker:text-purple-light/60">
+            <div key={i} className={`${sizeClass} ${i > 0 ? 'mt-3' : ''} mb-1`}>
+              <Inline text={block.text} />
+            </div>
+          );
+        }
+        if (block.type === 'unordered_list') {
+          return (
+            <ul key={i} className="my-1.5 space-y-1 list-disc list-outside ml-5 marker:text-purple-light/60">
               {block.items.map((item, j) => (
-                <li key={j} className="leading-snug">
+                <li key={j} className="leading-snug pl-1">
                   <Inline text={item} />
                 </li>
               ))}
             </ul>
+          );
+        }
+        if (block.type === 'ordered_list') {
+          return (
+            <ol key={i} className="my-1.5 space-y-1 list-decimal list-outside ml-5 marker:text-purple-light/70 marker:font-medium">
+              {block.items.map((item, j) => (
+                <li key={j} className="leading-snug pl-1">
+                  <Inline text={item} />
+                </li>
+              ))}
+            </ol>
           );
         }
         return (
@@ -233,27 +257,87 @@ function Markdown({ text }: { text: string }) {
   );
 }
 
-type Block = { type: 'paragraph'; text: string } | { type: 'list'; items: string[] };
+type Block =
+  | { type: 'paragraph'; text: string }
+  | { type: 'heading'; level: number; text: string }
+  | { type: 'unordered_list'; items: string[] }
+  | { type: 'ordered_list'; items: string[] };
 
+// Line-by-line parser. Groups consecutive list items, flushes on blank lines or new block types.
 function parseBlocks(text: string): Block[] {
-  // Split on blank lines into chunks. Each chunk is either a list (lines starting with -, *, or •)
-  // or a paragraph.
-  const chunks = text.split(/\n\s*\n/);
+  const lines = text.split('\n');
   const blocks: Block[] = [];
-  for (const chunk of chunks) {
-    const lines = chunk.split('\n').filter((l) => l.trim().length > 0);
-    if (lines.length === 0) continue;
-    const isList = lines.every((l) => /^\s*[-*•]\s+/.test(l));
-    if (isList) {
-      blocks.push({
-        type: 'list',
-        items: lines.map((l) => l.replace(/^\s*[-*•]\s+/, '')),
-      });
-    } else {
-      // Treat single-newline breaks as soft breaks within the paragraph
-      blocks.push({ type: 'paragraph', text: lines.join(' ') });
+  let paragraph: string[] = [];
+  let list: string[] | null = null;
+  let listKind: 'ordered_list' | 'unordered_list' | null = null;
+
+  function flushParagraph() {
+    if (paragraph.length > 0) {
+      blocks.push({ type: 'paragraph', text: paragraph.join(' ') });
+      paragraph = [];
     }
   }
+
+  function flushList() {
+    if (list && listKind) {
+      blocks.push({ type: listKind, items: list });
+      list = null;
+      listKind = null;
+    }
+  }
+
+  for (const raw of lines) {
+    const line = raw.trim();
+
+    // Blank line — flush whatever's open
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    // Heading: # / ## / ### up to 6 hashes
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: 'heading', level: headingMatch[1].length, text: headingMatch[2] });
+      continue;
+    }
+
+    // Ordered list item: "1. text" or "1) text"
+    const orderedMatch = line.match(/^\d+[.)]\s+(.+)$/);
+    if (orderedMatch) {
+      flushParagraph();
+      if (listKind !== 'ordered_list') {
+        flushList();
+        listKind = 'ordered_list';
+        list = [];
+      }
+      list!.push(orderedMatch[1]);
+      continue;
+    }
+
+    // Unordered list item: "- text", "* text", or "• text"
+    const unorderedMatch = line.match(/^[-*•]\s+(.+)$/);
+    if (unorderedMatch) {
+      flushParagraph();
+      if (listKind !== 'unordered_list') {
+        flushList();
+        listKind = 'unordered_list';
+        list = [];
+      }
+      list!.push(unorderedMatch[1]);
+      continue;
+    }
+
+    // Plain text line — accumulate into paragraph (and end any list)
+    flushList();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  flushList();
   return blocks;
 }
 
