@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { ActivityEntry } from '@/lib/types';
 
 const TYPE_STYLES: Record<string, { color: string; label: string }> = {
@@ -6,6 +10,8 @@ const TYPE_STYLES: Record<string, { color: string; label: string }> = {
   system: { color: 'border-midgray bg-charcoal/40 text-midgray', label: 'System' },
   belief_capital: { color: 'border-amber bg-amber/10 text-amber', label: 'Belief capital' },
 };
+
+const PAGE_SIZE = 20;
 
 function timeAgo(isoString: string): string {
   const ms = Date.now() - new Date(isoString).getTime();
@@ -20,7 +26,38 @@ function timeAgo(isoString: string): string {
   return `${month}mo ago`;
 }
 
-export default function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
+export default function ActivityFeed({
+  entries: initial,
+  dealId,
+}: {
+  entries: ActivityEntry[];
+  dealId?: string;
+}) {
+  const supabase = createClient();
+  const [entries, setEntries] = useState<ActivityEntry[]>(initial);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(initial.length >= PAGE_SIZE);
+
+  async function loadMore() {
+    if (!dealId || loading) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('activity_log')
+      .select('*')
+      .eq('deal_id', dealId)
+      .order('created_at', { ascending: false })
+      .range(entries.length, entries.length + PAGE_SIZE - 1);
+    if (error) {
+      setLoading(false);
+      return;
+    }
+    if (!data || data.length < PAGE_SIZE) setHasMore(false);
+    if (data && data.length > 0) {
+      setEntries((curr) => [...curr, ...data]);
+    }
+    setLoading(false);
+  }
+
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-teal-mid/20">
@@ -50,6 +87,17 @@ export default function ActivityFeed({ entries }: { entries: ActivityEntry[] }) 
           <li className="text-sm text-midgray">No activity yet.</li>
         )}
       </ul>
+      {hasMore && dealId && (
+        <div className="border-t border-teal-mid/15 p-3 text-center">
+          <button
+            onClick={loadMore}
+            disabled={loading}
+            className="text-sm text-teal hover:text-teal-light font-medium disabled:opacity-50"
+          >
+            {loading ? 'Loading…' : `Load more activity →`}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

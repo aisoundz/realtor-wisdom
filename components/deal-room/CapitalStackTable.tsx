@@ -52,6 +52,7 @@ export default function CapitalStackTable({
   const router = useRouter();
   const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const nextSortOrder = sources.length > 0 ? Math.max(...sources.map((s) => s.sort_order)) + 1 : 0;
 
@@ -110,6 +111,17 @@ export default function CapitalStackTable({
         {sources.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.pending;
           const isSelected = selectedId === s.id;
+          if (editingId === s.id) {
+            return (
+              <li key={s.id} className="border-b last:border-b-0 border-teal-mid/15">
+                <AddCapitalSourceForm
+                  dealId={dealId}
+                  existing={s}
+                  onClose={() => setEditingId(null)}
+                />
+              </li>
+            );
+          }
           return (
             <li
               key={s.id}
@@ -137,13 +149,23 @@ export default function CapitalStackTable({
                     <p className="text-sm text-offwhite/70 mt-2 leading-snug">{s.notes}</p>
                   )}
                 </div>
-                <div className="text-right shrink-0 flex items-start gap-3">
+                <div className="text-right shrink-0 flex items-start gap-2">
                   <div>
                     <div className="font-serif text-xl">{formatMoney(s.committed_amount)}</div>
                     <div className="text-xs text-purple/70 opacity-0 group-hover:opacity-100 transition">
                       Ask Wisdom →
                     </div>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(s.id);
+                    }}
+                    title="Edit"
+                    className="opacity-0 group-hover:opacity-100 text-midgray hover:text-teal text-sm leading-none px-1 transition"
+                  >
+                    ✎
+                  </button>
                   <button
                     onClick={(e) => deleteSource(s, e)}
                     title="Remove"

@@ -124,7 +124,7 @@ export default function DealRoom({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <StakeholderPanel stakeholders={stakeholders} dealId={deal.id} />
-          <ActivityFeed entries={activity} />
+          <ActivityFeed entries={activity} dealId={deal.id} />
         </div>
       </main>
 

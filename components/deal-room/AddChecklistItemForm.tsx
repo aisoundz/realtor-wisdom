@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import type { ChecklistItem } from '@/lib/types';
 
 const PHASES = [
   { value: 'pre_development', label: 'Pre-development' },
@@ -22,10 +23,12 @@ const STATUSES = [
 export default function AddChecklistItemForm({
   dealId,
   defaultPhase,
+  existing,
   onClose,
 }: {
   dealId: string;
   defaultPhase?: string;
+  existing?: ChecklistItem;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -33,33 +36,55 @@ export default function AddChecklistItemForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState('');
-  const [phase, setPhase] = useState(defaultPhase || 'pre_development');
-  const [status, setStatus] = useState('todo');
-  const [blockingClose, setBlockingClose] = useState(false);
-  const [notes, setNotes] = useState('');
+  const [name, setName] = useState(existing?.name ?? '');
+  const [phase, setPhase] = useState(existing?.phase ?? defaultPhase ?? 'pre_development');
+  const [status, setStatus] = useState(existing?.status ?? 'todo');
+  const [blockingClose, setBlockingClose] = useState(existing?.blocking_close ?? false);
+  const [notes, setNotes] = useState(existing?.notes ?? '');
+
+  const isEdit = !!existing;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.from('checklist_items').insert({
-      deal_id: dealId,
-      phase,
-      name,
-      status,
-      blocking_close: blockingClose,
-      notes: notes || null,
-      sort_order: 999,
-    });
-    if (error) {
+
+    let err: string | null = null;
+    if (isEdit && existing) {
+      const { error } = await supabase
+        .from('checklist_items')
+        .update({
+          phase,
+          name,
+          status,
+          blocking_close: blockingClose,
+          notes: notes || null,
+        })
+        .eq('id', existing.id);
+      err = error?.message ?? null;
+    } else {
+      const { error } = await supabase.from('checklist_items').insert({
+        deal_id: dealId,
+        phase,
+        name,
+        status,
+        blocking_close: blockingClose,
+        notes: notes || null,
+        sort_order: 999,
+      });
+      err = error?.message ?? null;
+    }
+
+    if (err) {
       setLoading(false);
-      setError(error.message);
+      setError(err);
       return;
     }
     await logActivity(supabase, {
       dealId,
-      action: `Added compliance item "${name}" (${phase.replace('_', ' ')}, ${status})${blockingClose ? ' — flagged as blocking construction close' : ''}`,
+      action: isEdit
+        ? `Updated compliance item "${name}" (${phase.replace('_', ' ')}, ${status})`
+        : `Added compliance item "${name}" (${phase.replace('_', ' ')}, ${status})${blockingClose ? ' — flagged as blocking construction close' : ''}`,
     });
     setLoading(false);
     onClose();
@@ -118,7 +143,7 @@ export default function AddChecklistItemForm({
           disabled={loading}
           className="bg-teal hover:bg-teal-mid text-offwhite px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
         >
-          {loading ? 'Adding…' : 'Add item'}
+          {loading ? 'Saving…' : isEdit ? 'Save changes' : 'Add item'}
         </button>
         <button
           type="button"

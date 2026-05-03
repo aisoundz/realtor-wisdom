@@ -4,6 +4,33 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { DealContext, WisdomTrigger } from '@/lib/types';
 
+// Web Speech API types (not in default TS libs)
+interface SpeechRecognitionResultLike {
+  0: { transcript: string };
+}
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+const QUICK_PROMPTS = [
+  { label: '🚧 What\'s blocking close?', prompt: 'What is the single most pressing thing blocking construction close on this deal? Be specific to the data — not generic advice.' },
+  { label: '💰 Find unclaimed capital', prompt: 'Look at this deal\'s profile — location, AMI targeting, deal type. What real estate capital programs am I likely to qualify for that I haven\'t applied to yet? Cite specific programs by name.' },
+  { label: '✉️ Draft outreach', prompt: 'Draft a short, direct outreach email to the most important pending stakeholder on this deal. Reference the specific deal context.' },
+  { label: '⚠️ 90-day risk', prompt: 'Forecast the top 3 risks to this deal in the next 90 days, ranked by likelihood × impact. Focus on the things actually visible in the deal data.' },
+];
+
 type Message = { role: 'user' | 'assistant'; content: string };
 
 export default function RealWisdomPanel({
@@ -23,8 +50,12 @@ export default function RealWisdomPanel({
   const [error, setError] = useState<string | null>(null);
   const [logging, setLogging] = useState(false);
   const [loggedAt, setLoggedAt] = useState<number | null>(null);
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [logValue, setLogValue] = useState('');
+  const [listening, setListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initialisedFor = useRef<string>('');
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   // When trigger changes, reset the conversation and ask the appropriate question
   useEffect(() => {
@@ -117,12 +148,14 @@ export default function RealWisdomPanel({
     if (!lastAssistant || !dealContext.deal?.id) return;
     setLogging(true);
     const supabase = createClient();
+    const cleanedValue = logValue.replace(/[^0-9.]/g, '');
+    const downstreamValue = cleanedValue ? Number(cleanedValue) : null;
     const { error } = await supabase.from('belief_capital_moments').insert({
       deal_id: dealContext.deal.id,
       developer_org_id: dealContext.deal.org_id,
       description: `${lastUser ? `Q: ${lastUser.content.slice(0, 150)}\n\n` : ''}A: ${lastAssistant.content.slice(0, 1000)}`,
       moment_type: 'belief_support',
-      downstream_value: null,
+      downstream_value: downstreamValue,
     });
     if (!error) {
       // Also log to activity feed
@@ -130,12 +163,54 @@ export default function RealWisdomPanel({
         deal_id: dealContext.deal.id,
         org_id: dealContext.deal.org_id,
         actor: 'You',
-        action: 'Logged a belief capital moment from Real Wisdom conversation',
+        action: downstreamValue
+          ? `Logged a belief capital moment ($${downstreamValue.toLocaleString()} downstream value)`
+          : 'Logged a belief capital moment from Real Wisdom conversation',
         type: 'belief_capital',
       });
       setLoggedAt(Date.now());
+      setShowLogForm(false);
+      setLogValue('');
     }
     setLogging(false);
+  }
+
+  function startVoiceInput() {
+    const w = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) {
+      setError('Voice input not supported in this browser. Try Chrome or Safari.');
+      return;
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+    }
+    const recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (e: SpeechRecognitionEventLike) => {
+      const results = Array.from({ length: e.results.length }, (_, i) => e.results[i]);
+      const transcript = results.map((r) => r[0].transcript).join('');
+      setInput(transcript);
+    };
+    recognition.onend = () => {
+      setListening(false);
+    };
+    recognition.onerror = () => {
+      setListening(false);
+    };
+    recognitionRef.current = recognition;
+    setListening(true);
+    recognition.start();
+  }
+
+  function stopVoiceInput() {
+    recognitionRef.current?.stop();
+    setListening(false);
   }
 
   const lastIsAssistantWithContent =
@@ -185,16 +260,47 @@ export default function RealWisdomPanel({
             <div className="text-sm text-purple-light/60 italic">Thinking…</div>
           )}
           {lastIsAssistantWithContent && !streaming && dealContext.deal?.id && (
-            <div className="flex justify-start">
+            <div>
               {loggedAt && Date.now() - loggedAt < 3000 ? (
                 <span className="text-xs text-teal">✓ Logged as belief capital moment</span>
+              ) : showLogForm ? (
+                <div className="bg-amber/5 border border-amber/30 rounded-lg p-3 space-y-2">
+                  <label className="text-xs text-amber-light">Downstream value (optional)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={logValue}
+                      onChange={(e) => setLogValue(e.target.value)}
+                      placeholder="e.g. 1000000"
+                      className="flex-1 bg-charcoal/60 border border-amber/30 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-amber"
+                    />
+                    <button
+                      onClick={logBeliefMoment}
+                      disabled={logging}
+                      className="bg-amber text-charcoal px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {logging ? 'Saving…' : 'Save moment'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowLogForm(false);
+                        setLogValue('');
+                      }}
+                      className="text-midgray hover:text-offwhite text-sm px-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <p className="text-xs text-midgray">
+                    Total dollars enabled or kept-alive by this conversation. Leave blank for non-monetary moments.
+                  </p>
+                </div>
               ) : (
                 <button
-                  onClick={logBeliefMoment}
-                  disabled={logging}
-                  className="text-xs px-2.5 py-1 rounded-full border border-amber/30 text-amber hover:bg-amber/10 transition disabled:opacity-50"
+                  onClick={() => setShowLogForm(true)}
+                  className="text-xs px-2.5 py-1 rounded-full border border-amber/30 text-amber hover:bg-amber/10 transition"
                 >
-                  {logging ? 'Logging…' : '✨ Log as belief capital moment'}
+                  ✨ Log as belief capital moment
                 </button>
               )}
             </div>
@@ -215,22 +321,53 @@ export default function RealWisdomPanel({
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-purple/20 p-3 flex gap-2 bg-charcoal">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask Real Wisdom anything…"
-            disabled={streaming}
-            className="flex-1 bg-charcoal/60 border border-purple/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={streaming || !input.trim()}
-            className="bg-purple hover:bg-purple-dark text-offwhite px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-          >
-            Send
-          </button>
-        </form>
+        <div className="border-t border-purple/20 bg-charcoal">
+          {/* Quick prompts */}
+          <div className="px-3 pt-3 pb-1 flex flex-wrap gap-1.5">
+            {QUICK_PROMPTS.map((q) => (
+              <button
+                key={q.label}
+                onClick={() => void sendMessage(q.prompt, messages)}
+                disabled={streaming}
+                className="text-xs px-2.5 py-1 rounded-full bg-purple/10 hover:bg-purple/20 border border-purple/30 text-purple-light transition disabled:opacity-50"
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+          <form onSubmit={handleSubmit} className="p-3 flex gap-2">
+            <button
+              type="button"
+              onClick={listening ? stopVoiceInput : startVoiceInput}
+              disabled={streaming}
+              title={listening ? 'Stop' : 'Voice input'}
+              className={`shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center transition ${
+                listening
+                  ? 'bg-red/20 border-red animate-pulse'
+                  : 'bg-charcoal/60 border-purple/30 hover:border-purple'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+              </svg>
+            </button>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={listening ? 'Listening…' : 'Ask Real Wisdom anything…'}
+              disabled={streaming}
+              className="flex-1 bg-charcoal/60 border border-purple/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={streaming || !input.trim()}
+              className="bg-purple hover:bg-purple-dark text-offwhite px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              Send
+            </button>
+          </form>
+        </div>
       </aside>
     </>
   );

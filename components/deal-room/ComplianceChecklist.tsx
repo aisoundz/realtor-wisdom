@@ -33,6 +33,7 @@ export default function ComplianceChecklist({
   const router = useRouter();
   const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function toggleDone(item: ChecklistItem, e: React.MouseEvent) {
@@ -119,7 +120,19 @@ export default function ComplianceChecklist({
                   </span>
                 </div>
                 <ul className="space-y-1.5">
-                  {phaseItems.map((item) => (
+                  {phaseItems.map((item) => {
+                    if (editingId === item.id) {
+                      return (
+                        <li key={item.id} className="-mx-6 -my-1.5">
+                          <AddChecklistItemForm
+                            dealId={dealId}
+                            existing={item}
+                            onClose={() => setEditingId(null)}
+                          />
+                        </li>
+                      );
+                    }
+                    return (
                     <li
                       key={item.id}
                       onClick={() => onSelect(item)}
@@ -159,6 +172,16 @@ export default function ComplianceChecklist({
                         {item.notes && <p className="text-xs text-midgray mt-0.5">{item.notes}</p>}
                       </div>
                       <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(item.id);
+                        }}
+                        title="Edit"
+                        className="opacity-0 group-hover:opacity-100 text-midgray hover:text-teal text-sm leading-none px-1 transition self-start mt-1"
+                      >
+                        ✎
+                      </button>
+                      <button
                         onClick={(e) => deleteItem(item, e)}
                         title="Remove"
                         className="opacity-0 group-hover:opacity-100 text-midgray hover:text-red text-base leading-none px-1 transition self-start mt-0.5"
@@ -166,7 +189,8 @@ export default function ComplianceChecklist({
                         ×
                       </button>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             );

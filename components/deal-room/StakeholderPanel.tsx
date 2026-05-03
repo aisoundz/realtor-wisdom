@@ -23,6 +23,7 @@ export default function StakeholderPanel({
   const router = useRouter();
   const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function deleteStakeholder(s: Stakeholder) {
@@ -61,6 +62,17 @@ export default function StakeholderPanel({
       <ul className="divide-y divide-teal-mid/15">
         {stakeholders.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.active;
+          if (editingId === s.id) {
+            return (
+              <li key={s.id}>
+                <AddStakeholderForm
+                  dealId={dealId}
+                  existing={s}
+                  onClose={() => setEditingId(null)}
+                />
+              </li>
+            );
+          }
           return (
             <li key={s.id} className="group px-6 py-3 flex items-center gap-3 hover:bg-charcoal/40 transition">
               <div className="w-9 h-9 rounded-full bg-teal-mid/30 flex items-center justify-center text-xs font-medium">
@@ -81,6 +93,13 @@ export default function StakeholderPanel({
                   </span>
                 )}
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${style}`}>{s.status}</span>
+                <button
+                  onClick={() => setEditingId(s.id)}
+                  title="Edit"
+                  className="opacity-0 group-hover:opacity-100 text-midgray hover:text-teal text-sm leading-none px-1 transition"
+                >
+                  ✎
+                </button>
                 <button
                   onClick={() => deleteStakeholder(s)}
                   disabled={busyId === s.id}

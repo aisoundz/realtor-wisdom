@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import type { Stakeholder } from '@/lib/types';
 
 export default function AddStakeholderForm({
   dealId,
+  existing,
   onClose,
 }: {
   dealId: string;
+  existing?: Stakeholder;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -17,29 +20,49 @@ export default function AddStakeholderForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
-  const [status, setStatus] = useState('active');
+  const [name, setName] = useState(existing?.name ?? '');
+  const [role, setRole] = useState(existing?.role ?? '');
+  const [status, setStatus] = useState(existing?.status ?? 'active');
+
+  const isEdit = !!existing;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.from('deal_stakeholders').insert({
-      deal_id: dealId,
-      name,
-      role: role || null,
-      status,
-      action_items: 0,
-    });
-    if (error) {
+
+    let err: string | null = null;
+    if (isEdit && existing) {
+      const { error } = await supabase
+        .from('deal_stakeholders')
+        .update({
+          name,
+          role: role || null,
+          status,
+        })
+        .eq('id', existing.id);
+      err = error?.message ?? null;
+    } else {
+      const { error } = await supabase.from('deal_stakeholders').insert({
+        deal_id: dealId,
+        name,
+        role: role || null,
+        status,
+        action_items: 0,
+      });
+      err = error?.message ?? null;
+    }
+
+    if (err) {
       setLoading(false);
-      setError(error.message);
+      setError(err);
       return;
     }
     await logActivity(supabase, {
       dealId,
-      action: `Added stakeholder ${name}${role ? ` — ${role}` : ''}`,
+      action: isEdit
+        ? `Updated stakeholder ${name}${role ? ` — ${role}` : ''}`
+        : `Added stakeholder ${name}${role ? ` — ${role}` : ''}`,
       type: 'stakeholder',
     });
     setLoading(false);
@@ -80,7 +103,7 @@ export default function AddStakeholderForm({
           disabled={loading}
           className="bg-teal hover:bg-teal-mid text-offwhite px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
         >
-          {loading ? 'Adding…' : 'Add stakeholder'}
+          {loading ? 'Saving…' : isEdit ? 'Save changes' : 'Add stakeholder'}
         </button>
         <button
           type="button"

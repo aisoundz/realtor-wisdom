@@ -32,6 +32,7 @@ export default function MilestoneTimeline({
   const router = useRouter();
   const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const nextSortOrder = milestones.length > 0 ? Math.max(...milestones.map((m) => m.sort_order)) + 1 : 0;
 
@@ -90,6 +91,17 @@ export default function MilestoneTimeline({
       <ol className="px-6 py-6 space-y-4">
         {milestones.map((m, idx) => {
           const styleCircle = STATUS_STYLES[m.status] ?? STATUS_STYLES.todo;
+          if (editingId === m.id) {
+            return (
+              <li key={m.id} className="-mx-6">
+                <AddMilestoneForm
+                  dealId={dealId}
+                  existing={m}
+                  onClose={() => setEditingId(null)}
+                />
+              </li>
+            );
+          }
           return (
             <li
               key={m.id}
@@ -115,6 +127,16 @@ export default function MilestoneTimeline({
                     : `Target ${formatDate(m.target_date)}`}
                 </div>
               </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingId(m.id);
+                }}
+                title="Edit"
+                className="opacity-0 group-hover:opacity-100 text-midgray hover:text-teal text-sm leading-none px-1 transition self-start mt-1"
+              >
+                ✎
+              </button>
               <button
                 onClick={(e) => deleteMilestone(m, e)}
                 title="Remove"

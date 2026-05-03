@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logActivity } from '@/lib/activity';
+import type { CapitalSource } from '@/lib/types';
 
 const SOURCE_TYPES = [
   { value: 'impact_loan', label: 'Impact loan' },
@@ -30,10 +31,12 @@ const STATUSES = [
 export default function AddCapitalSourceForm({
   dealId,
   nextSortOrder,
+  existing,
   onClose,
 }: {
   dealId: string;
-  nextSortOrder: number;
+  nextSortOrder?: number;
+  existing?: CapitalSource;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -41,39 +44,63 @@ export default function AddCapitalSourceForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState('');
-  const [sourceType, setSourceType] = useState('cdfi');
-  const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('pending');
-  const [notes, setNotes] = useState('');
+  const [name, setName] = useState(existing?.name ?? '');
+  const [sourceType, setSourceType] = useState(existing?.source_type ?? 'cdfi');
+  const [amount, setAmount] = useState(existing?.committed_amount ? String(existing.committed_amount) : '');
+  const [status, setStatus] = useState(existing?.status ?? 'pending');
+  const [notes, setNotes] = useState(existing?.notes ?? '');
+
+  const isEdit = !!existing;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const amountNum = amount ? Number(amount.replace(/[^0-9]/g, '')) : 0;
-    const { error } = await supabase.from('capital_sources').insert({
-      deal_id: dealId,
-      name,
-      source_type: sourceType,
-      committed_amount: amountNum,
-      status,
-      notes: notes || null,
-      sort_order: nextSortOrder,
-    });
-    if (error) {
+
+    let err: string | null = null;
+    if (isEdit && existing) {
+      const { error } = await supabase
+        .from('capital_sources')
+        .update({
+          name,
+          source_type: sourceType,
+          committed_amount: amountNum,
+          status,
+          notes: notes || null,
+        })
+        .eq('id', existing.id);
+      err = error?.message ?? null;
+    } else {
+      const { error } = await supabase.from('capital_sources').insert({
+        deal_id: dealId,
+        name,
+        source_type: sourceType,
+        committed_amount: amountNum,
+        status,
+        notes: notes || null,
+        sort_order: nextSortOrder ?? 0,
+      });
+      err = error?.message ?? null;
+    }
+
+    if (err) {
       setLoading(false);
-      setError(error.message);
+      setError(err);
       return;
     }
-    const dollars = amountNum >= 1_000_000
-      ? `$${(amountNum / 1_000_000).toFixed(2)}M`
-      : amountNum >= 1_000
-        ? `$${(amountNum / 1_000).toFixed(0)}K`
-        : `$${amountNum}`;
+
+    const dollars =
+      amountNum >= 1_000_000
+        ? `$${(amountNum / 1_000_000).toFixed(2)}M`
+        : amountNum >= 1_000
+          ? `$${(amountNum / 1_000).toFixed(0)}K`
+          : `$${amountNum}`;
     await logActivity(supabase, {
       dealId,
-      action: `Added ${name} ${dollars} (${sourceType}, ${status}) to capital stack`,
+      action: isEdit
+        ? `Updated ${name} (${sourceType}, ${status}, ${dollars})`
+        : `Added ${name} ${dollars} (${sourceType}, ${status}) to capital stack`,
     });
     setLoading(false);
     onClose();
@@ -129,7 +156,7 @@ export default function AddCapitalSourceForm({
           disabled={loading}
           className="bg-teal hover:bg-teal-mid text-offwhite px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
         >
-          {loading ? 'Adding…' : 'Add source'}
+          {loading ? 'Saving…' : isEdit ? 'Save changes' : 'Add source'}
         </button>
         <button
           type="button"
