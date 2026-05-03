@@ -56,12 +56,14 @@ export default function MarketplaceClient({
       .limit(1);
     const nextSortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
 
-    const initialAmount = source.min_amount ?? 0;
+    // Add at $0 — the user hasn't committed any actual amount yet, just expressed
+    // interest. They'll edit the row in the deal room to set the real ask.
+    // (Defaulting to source.min_amount inflated the deal's "secured" total.)
     const { error } = await supabase.from('capital_sources').insert({
       deal_id: selectedDealId,
       name: source.name,
       source_type: source.source_type,
-      committed_amount: initialAmount,
+      committed_amount: 0,
       status: 'requested',
       notes: source.description ?? null,
       sort_order: nextSortOrder,
@@ -85,7 +87,7 @@ export default function MarketplaceClient({
       deal_id: selectedDealId,
       org_id: dealOrgId,
       actor: 'You',
-      action: `Added ${source.name} (${source.source_type ?? 'source'}) to capital stack from marketplace`,
+      action: `Added ${source.name} (${source.source_type ?? 'source'}) to capital stack from marketplace — set the amount you're requesting in the deal room`,
       type: 'system',
     });
 
@@ -211,7 +213,7 @@ export default function MarketplaceClient({
                       href={`/deals/${selectedDealId}`}
                       className="text-teal-light font-medium"
                     >
-                      ✓ Added — view in deal →
+                      ✓ Added at $0 — set amount in deal →
                     </a>
                   ) : (
                     <button
