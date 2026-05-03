@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { DealContext, WisdomTrigger } from '@/lib/types';
 
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -20,6 +21,8 @@ export default function RealWisdomPanel({
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logging, setLogging] = useState(false);
+  const [loggedAt, setLoggedAt] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initialisedFor = useRef<string>('');
 
@@ -108,6 +111,38 @@ export default function RealWisdomPanel({
     void sendMessage(text, messages);
   }
 
+  async function logBeliefMoment() {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
+    if (!lastAssistant || !dealContext.deal?.id) return;
+    setLogging(true);
+    const supabase = createClient();
+    const { error } = await supabase.from('belief_capital_moments').insert({
+      deal_id: dealContext.deal.id,
+      developer_org_id: dealContext.deal.org_id,
+      description: `${lastUser ? `Q: ${lastUser.content.slice(0, 150)}\n\n` : ''}A: ${lastAssistant.content.slice(0, 1000)}`,
+      moment_type: 'belief_support',
+      downstream_value: null,
+    });
+    if (!error) {
+      // Also log to activity feed
+      await supabase.from('activity_log').insert({
+        deal_id: dealContext.deal.id,
+        org_id: dealContext.deal.org_id,
+        actor: 'You',
+        action: 'Logged a belief capital moment from Real Wisdom conversation',
+        type: 'belief_capital',
+      });
+      setLoggedAt(Date.now());
+    }
+    setLogging(false);
+  }
+
+  const lastIsAssistantWithContent =
+    messages.length > 0 &&
+    messages[messages.length - 1].role === 'assistant' &&
+    messages[messages.length - 1].content.length > 0;
+
   return (
     <>
       {/* Backdrop */}
@@ -148,6 +183,21 @@ export default function RealWisdomPanel({
           ))}
           {streaming && messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 1].content === '' && (
             <div className="text-sm text-purple-light/60 italic">Thinking…</div>
+          )}
+          {lastIsAssistantWithContent && !streaming && dealContext.deal?.id && (
+            <div className="flex justify-start">
+              {loggedAt && Date.now() - loggedAt < 3000 ? (
+                <span className="text-xs text-teal">✓ Logged as belief capital moment</span>
+              ) : (
+                <button
+                  onClick={logBeliefMoment}
+                  disabled={logging}
+                  className="text-xs px-2.5 py-1 rounded-full border border-amber/30 text-amber hover:bg-amber/10 transition disabled:opacity-50"
+                >
+                  {logging ? 'Logging…' : '✨ Log as belief capital moment'}
+                </button>
+              )}
+            </div>
           )}
           {error && (
             <div className="text-sm bg-red/10 border border-red/30 rounded-lg px-3 py-3 space-y-2">

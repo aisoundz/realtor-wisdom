@@ -1,8 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 import type { Milestone } from '@/lib/types';
 import AddMilestoneForm from './AddMilestoneForm';
+
+const MILESTONE_CYCLE = ['todo', 'active', 'done'];
 
 const STATUS_STYLES: Record<string, string> = {
   done: 'bg-teal text-offwhite border-teal',
@@ -24,8 +29,42 @@ export default function MilestoneTimeline({
   onSelect: (m: Milestone) => void;
   dealId: string;
 }) {
+  const router = useRouter();
+  const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const nextSortOrder = milestones.length > 0 ? Math.max(...milestones.map((m) => m.sort_order)) + 1 : 0;
+
+  async function cycleStatus(m: Milestone, e: React.MouseEvent) {
+    e.stopPropagation();
+    setBusyId(m.id);
+    const idx = MILESTONE_CYCLE.indexOf(m.status);
+    const next = MILESTONE_CYCLE[(idx + 1) % MILESTONE_CYCLE.length];
+    const update: { status: string; completed_date: string | null } = {
+      status: next,
+      completed_date: next === 'done' ? new Date().toISOString().slice(0, 10) : null,
+    };
+    await supabase.from('milestones').update(update).eq('id', m.id);
+    await logActivity(supabase, {
+      dealId,
+      action: `Updated milestone "${m.name}": ${m.status} → ${next}`,
+    });
+    setBusyId(null);
+    router.refresh();
+  }
+
+  async function deleteMilestone(m: Milestone, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`Remove milestone "${m.name}"?`)) return;
+    setBusyId(m.id);
+    await supabase.from('milestones').delete().eq('id', m.id);
+    await logActivity(supabase, {
+      dealId,
+      action: `Removed milestone: "${m.name}"`,
+    });
+    setBusyId(null);
+    router.refresh();
+  }
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
@@ -60,11 +99,14 @@ export default function MilestoneTimeline({
               {idx < milestones.length - 1 && (
                 <span className="absolute left-[19px] top-9 bottom-0 w-px bg-teal-mid/30" />
               )}
-              <span
-                className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-medium ${styleCircle}`}
+              <button
+                onClick={(e) => cycleStatus(m, e)}
+                disabled={busyId === m.id}
+                title="Click to cycle status"
+                className={`relative z-10 w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-medium ${styleCircle} hover:opacity-80 transition disabled:opacity-50`}
               >
                 {m.status === 'done' ? '✓' : idx + 1}
-              </span>
+              </button>
               <div className="flex-1 pt-1">
                 <div className="font-medium text-sm">{m.name}</div>
                 <div className="text-xs text-midgray mt-0.5">
@@ -73,6 +115,13 @@ export default function MilestoneTimeline({
                     : `Target ${formatDate(m.target_date)}`}
                 </div>
               </div>
+              <button
+                onClick={(e) => deleteMilestone(m, e)}
+                title="Remove"
+                className="opacity-0 group-hover:opacity-100 text-midgray hover:text-red text-base leading-none px-1 transition self-start mt-1"
+              >
+                ×
+              </button>
             </li>
           );
         })}

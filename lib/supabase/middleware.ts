@@ -49,6 +49,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Public deal profiles (/deals/[id]/public) are accessible without auth
+  const isPublicDeal = /^\/deals\/[^/]+\/public$/.test(path);
+
   // Unauthenticated user trying to access protected app routes → bounce to login
   const protectedPrefixes = [
     '/dashboard',
@@ -58,7 +61,7 @@ export async function updateSession(request: NextRequest) {
     '/real-wisdom',
     '/impact-score',
   ];
-  if (!user && protectedPrefixes.some((p) => path.startsWith(p))) {
+  if (!user && !isPublicDeal && protectedPrefixes.some((p) => path.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     url.searchParams.set('redirectTo', path);

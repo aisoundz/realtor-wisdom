@@ -1,8 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 import type { CapitalSource } from '@/lib/types';
 import AddCapitalSourceForm from './AddCapitalSourceForm';
+
+const STATUS_CYCLE = ['pending', 'in_loi', 'approved', 'confirmed', 'requested', 'gap'];
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   approved: { label: 'Approved', className: 'bg-teal/15 text-teal border-teal/30' },
@@ -44,8 +49,38 @@ export default function CapitalStackTable({
   onSelect: (source: CapitalSource) => void;
   dealId: string;
 }) {
+  const router = useRouter();
+  const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const nextSortOrder = sources.length > 0 ? Math.max(...sources.map((s) => s.sort_order)) + 1 : 0;
+
+  async function cycleStatus(s: CapitalSource, e: React.MouseEvent) {
+    e.stopPropagation();
+    setBusyId(s.id);
+    const idx = STATUS_CYCLE.indexOf(s.status);
+    const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+    await supabase.from('capital_sources').update({ status: next }).eq('id', s.id);
+    await logActivity(supabase, {
+      dealId,
+      action: `Updated ${s.name} status: ${s.status} → ${next}`,
+    });
+    setBusyId(null);
+    router.refresh();
+  }
+
+  async function deleteSource(s: CapitalSource, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`Remove ${s.name} from the capital stack?`)) return;
+    setBusyId(s.id);
+    await supabase.from('capital_sources').delete().eq('id', s.id);
+    await logActivity(supabase, {
+      dealId,
+      action: `Removed ${s.name} from capital stack`,
+    });
+    setBusyId(null);
+    router.refresh();
+  }
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
@@ -84,11 +119,16 @@ export default function CapitalStackTable({
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
+                  <div className="flex items-center gap-3 mb-1 flex-wrap">
                     <span className="font-medium text-base">{s.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${style.className}`}>
-                      {style.label}
-                    </span>
+                    <button
+                      onClick={(e) => cycleStatus(s, e)}
+                      disabled={busyId === s.id}
+                      title="Click to cycle status"
+                      className={`text-xs px-2 py-0.5 rounded-full border transition hover:opacity-80 ${style.className} disabled:opacity-50`}
+                    >
+                      {busyId === s.id ? '…' : style.label}
+                    </button>
                   </div>
                   <div className="text-xs text-midgray">
                     {s.source_type ? SOURCE_TYPE_LABELS[s.source_type] ?? s.source_type : ''}
@@ -97,11 +137,20 @@ export default function CapitalStackTable({
                     <p className="text-sm text-offwhite/70 mt-2 leading-snug">{s.notes}</p>
                   )}
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="font-serif text-xl">{formatMoney(s.committed_amount)}</div>
-                  <div className="text-xs text-purple/70 opacity-0 group-hover:opacity-100 transition">
-                    Ask Wisdom →
+                <div className="text-right shrink-0 flex items-start gap-3">
+                  <div>
+                    <div className="font-serif text-xl">{formatMoney(s.committed_amount)}</div>
+                    <div className="text-xs text-purple/70 opacity-0 group-hover:opacity-100 transition">
+                      Ask Wisdom →
+                    </div>
                   </div>
+                  <button
+                    onClick={(e) => deleteSource(s, e)}
+                    title="Remove"
+                    className="opacity-0 group-hover:opacity-100 text-midgray hover:text-red text-lg leading-none px-1 transition"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
             </li>

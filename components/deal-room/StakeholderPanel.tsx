@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { logActivity } from '@/lib/activity';
 import type { Stakeholder } from '@/lib/types';
 import AddStakeholderForm from './AddStakeholderForm';
 
@@ -17,7 +20,23 @@ export default function StakeholderPanel({
   stakeholders: Stakeholder[];
   dealId: string;
 }) {
+  const router = useRouter();
+  const supabase = createClient();
   const [adding, setAdding] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function deleteStakeholder(s: Stakeholder) {
+    if (!confirm(`Remove ${s.name} from this deal?`)) return;
+    setBusyId(s.id);
+    await supabase.from('deal_stakeholders').delete().eq('id', s.id);
+    await logActivity(supabase, {
+      dealId,
+      action: `Removed stakeholder: ${s.name}`,
+      type: 'stakeholder',
+    });
+    setBusyId(null);
+    router.refresh();
+  }
 
   return (
     <section className="bg-charcoal/30 border border-teal-mid/20 rounded-2xl overflow-hidden">
@@ -43,7 +62,7 @@ export default function StakeholderPanel({
         {stakeholders.map((s) => {
           const style = STATUS_STYLES[s.status] ?? STATUS_STYLES.active;
           return (
-            <li key={s.id} className="px-6 py-3 flex items-center gap-3">
+            <li key={s.id} className="group px-6 py-3 flex items-center gap-3 hover:bg-charcoal/40 transition">
               <div className="w-9 h-9 rounded-full bg-teal-mid/30 flex items-center justify-center text-xs font-medium">
                 {s.name
                   .split(' ')
@@ -62,6 +81,14 @@ export default function StakeholderPanel({
                   </span>
                 )}
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${style}`}>{s.status}</span>
+                <button
+                  onClick={() => deleteStakeholder(s)}
+                  disabled={busyId === s.id}
+                  title="Remove"
+                  className="opacity-0 group-hover:opacity-100 text-midgray hover:text-red text-base leading-none px-1 transition disabled:opacity-50"
+                >
+                  ×
+                </button>
               </div>
             </li>
           );

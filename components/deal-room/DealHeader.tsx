@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Deal } from '@/lib/types';
 import UserMenu from '@/components/UserMenu';
+import PublicToggle from './PublicToggle';
 
 function formatMoney(amount: number | null): string {
   if (amount == null) return '—';
@@ -37,7 +38,7 @@ export default function DealHeader({ deal, secured, userEmail }: { deal: Deal; s
       </div>
 
       <div className="px-8 py-6">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
           <div>
             <h1 className="font-serif text-4xl mb-1">{deal.name}</h1>
             <p className="text-midgray text-sm">
@@ -46,6 +47,7 @@ export default function DealHeader({ deal, secured, userEmail }: { deal: Deal; s
               {deal.ami_targeting ? ` · ${deal.ami_targeting}` : ''}
             </p>
           </div>
+          <PublicToggle dealId={deal.id} isPublic={deal.is_public} />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
