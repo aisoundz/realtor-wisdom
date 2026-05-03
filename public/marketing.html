@@ -30,8 +30,10 @@ nav.scrolled{background:rgba(247,246,242,.97);backdrop-filter:blur(16px);border-
 .nav-links a:hover{color:var(--ch)}
 .nav-cta{background:var(--teal);color:white;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .2s;text-decoration:none;display:inline-block}
 .nav-cta:hover{background:var(--tm)}
-.nav-signin{font-size:13px;color:var(--ch);text-decoration:none;font-weight:500;padding:9px 14px;border-radius:8px;transition:background .2s;margin-right:6px}
-.nav-signin:hover{background:rgba(0,0,0,.04)}
+.nav-signin{font-size:13px;color:white;text-decoration:none;font-weight:500;padding:9px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.25);transition:all .2s;margin-right:8px;display:inline-block}
+.nav-signin:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.45)}
+nav.scrolled .nav-signin{color:var(--ch);border-color:rgba(0,0,0,.15)}
+nav.scrolled .nav-signin:hover{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.3)}
 
 /* SHARED */
 section{padding:96px 48px}
