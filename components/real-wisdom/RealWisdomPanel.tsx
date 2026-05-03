@@ -150,8 +150,17 @@ export default function RealWisdomPanel({
             <div className="text-sm text-purple-light/60 italic">Thinking…</div>
           )}
           {error && (
-            <div className="text-sm text-red bg-red/10 border border-red/30 rounded-lg px-3 py-2">
-              {error}
+            <div className="text-sm bg-red/10 border border-red/30 rounded-lg px-3 py-3 space-y-2">
+              <div className="font-medium text-red">Real Wisdom failed</div>
+              <div className="text-offwhite/80 break-words">{error}</div>
+              <div className="text-xs text-midgray pt-1 border-t border-red/20">
+                Common fixes:
+                <ul className="mt-1 space-y-0.5 ml-4 list-disc">
+                  <li>Anthropic API key missing or invalid in Vercel env vars</li>
+                  <li>Anthropic billing not set up — add a payment method at console.anthropic.com</li>
+                  <li>Rate limit hit — wait a minute and try again</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>

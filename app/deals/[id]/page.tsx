@@ -40,6 +40,7 @@ export default async function DealRoomPage({ params }: { params: { id: string } 
       milestones={milestones ?? []}
       stakeholders={stakeholders ?? []}
       activity={activity ?? []}
+      userEmail={user.email!}
     />
   );
 }

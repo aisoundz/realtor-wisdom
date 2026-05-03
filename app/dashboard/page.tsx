@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import SeedButton from './SeedButton';
+import UserMenu from '@/components/UserMenu';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,13 +31,16 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-midgray text-sm">Welcome back, {user.email}</p>
         </div>
-        <nav className="flex gap-6 text-sm">
-          <Link href="/dashboard" className="text-teal">Deals</Link>
-          <Link href="/marketplace" className="hover:text-teal">Marketplace</Link>
-          <Link href="/portfolio" className="hover:text-teal">Portfolio</Link>
-          <Link href="/real-wisdom" className="hover:text-purple">Real Wisdom</Link>
-          <Link href="/impact-score" className="hover:text-amber">RIS</Link>
-        </nav>
+        <div className="flex items-center gap-6">
+          <nav className="flex gap-6 text-sm">
+            <Link href="/dashboard" className="text-teal">Deals</Link>
+            <Link href="/marketplace" className="hover:text-teal">Marketplace</Link>
+            <Link href="/portfolio" className="hover:text-teal">Portfolio</Link>
+            <Link href="/real-wisdom" className="hover:text-purple">Real Wisdom</Link>
+            <Link href="/impact-score" className="hover:text-amber">RIS</Link>
+          </nav>
+          <UserMenu email={user.email!} />
+        </div>
       </header>
 
       <section className="px-8 py-10 max-w-7xl mx-auto">

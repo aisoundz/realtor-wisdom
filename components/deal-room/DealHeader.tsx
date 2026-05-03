@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Deal } from '@/lib/types';
+import UserMenu from '@/components/UserMenu';
 
 function formatMoney(amount: number | null): string {
   if (amount == null) return '—';
@@ -8,7 +9,7 @@ function formatMoney(amount: number | null): string {
   return `$${amount}`;
 }
 
-export default function DealHeader({ deal, secured }: { deal: Deal; secured: number }) {
+export default function DealHeader({ deal, secured, userEmail }: { deal: Deal; secured: number; userEmail: string }) {
   const gap = (deal.total_cost ?? 0) - secured;
   const completion = deal.total_cost ? Math.min(100, (secured / deal.total_cost) * 100) : 0;
 
@@ -23,13 +24,16 @@ export default function DealHeader({ deal, secured }: { deal: Deal; secured: num
             {deal.status}
           </span>
         </div>
-        <nav className="flex gap-6 text-sm">
-          <Link href="/dashboard" className="text-midgray hover:text-teal">Deals</Link>
-          <Link href="/marketplace" className="text-midgray hover:text-teal">Marketplace</Link>
-          <Link href="/portfolio" className="text-midgray hover:text-teal">Portfolio</Link>
-          <Link href="/real-wisdom" className="text-midgray hover:text-purple">Real Wisdom</Link>
-          <Link href="/impact-score" className="text-midgray hover:text-amber">RIS</Link>
-        </nav>
+        <div className="flex items-center gap-6">
+          <nav className="flex gap-6 text-sm">
+            <Link href="/dashboard" className="text-midgray hover:text-teal">Deals</Link>
+            <Link href="/marketplace" className="text-midgray hover:text-teal">Marketplace</Link>
+            <Link href="/portfolio" className="text-midgray hover:text-teal">Portfolio</Link>
+            <Link href="/real-wisdom" className="text-midgray hover:text-purple">Real Wisdom</Link>
+            <Link href="/impact-score" className="text-midgray hover:text-amber">RIS</Link>
+          </nav>
+          <UserMenu email={userEmail} />
+        </div>
       </div>
 
       <div className="px-8 py-6">

@@ -26,6 +26,7 @@ export default function DealRoom({
   milestones,
   stakeholders,
   activity,
+  userEmail,
 }: {
   deal: Deal;
   capitalSources: CapitalSource[];
@@ -33,6 +34,7 @@ export default function DealRoom({
   milestones: Milestone[];
   stakeholders: Stakeholder[];
   activity: ActivityEntry[];
+  userEmail: string;
 }) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [trigger, setTrigger] = useState<WisdomTrigger>({ kind: 'free' });
@@ -89,7 +91,7 @@ export default function DealRoom({
 
   return (
     <div className="min-h-screen bg-teal-deep text-offwhite">
-      <DealHeader deal={deal} secured={secured} />
+      <DealHeader deal={deal} secured={secured} userEmail={userEmail} />
 
       {/* Proactive Wisdom banner */}
       <ProactiveWisdomBanner
