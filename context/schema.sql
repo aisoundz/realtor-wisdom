@@ -209,6 +209,7 @@ create table if not exists portfolio_entries (
 -- Row-level security
 -- =====================================================
 
+alter table organizations enable row level security;
 alter table deals enable row level security;
 alter table capital_sources enable row level security;
 alter table checklist_items enable row level security;
@@ -219,6 +220,22 @@ alter table belief_capital_moments enable row level security;
 alter table portfolio_entries enable row level security;
 alter table marketplace_matches enable row level security;
 alter table profiles enable row level security;
+
+-- Organizations: any authenticated user can create one (their own); users can read/update orgs they belong to
+drop policy if exists "Auth users can create orgs" on organizations;
+create policy "Auth users can create orgs" on organizations
+  for insert
+  with check (auth.uid() is not null);
+
+drop policy if exists "Users read their org" on organizations;
+create policy "Users read their org" on organizations
+  for select
+  using (id in (select org_id from profiles where id = auth.uid()));
+
+drop policy if exists "Users update their org" on organizations;
+create policy "Users update their org" on organizations
+  for update
+  using (id in (select org_id from profiles where id = auth.uid()));
 
 -- Profiles: a user can read their own profile
 drop policy if exists "Users read own profile" on profiles;
